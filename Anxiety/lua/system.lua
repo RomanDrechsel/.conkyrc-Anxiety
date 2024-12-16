@@ -13,6 +13,11 @@ function System:new()
         self.System = pipe("cat /etc/os-release | grep PRETTY_NAME | awk -F'\"' '{gsub(/\\(.*)/, \"\", $2); gsub(/\\(.*)/, \"\", $2); print $2}'")
     end
 
+    local version = pipe("cat /etc/lsb-release | grep DISTRIB_RELEASE | awk -F'\"' '{gsub(/\\(.*)/, \"\", $2); gsub(/\\(.*)/, \"\", $2); print $2}'")
+    if version then
+        self.System = self.System .. " " .. version
+    end
+
     local uname = pipe("uname -a")
     if uname then
         local _, host, kernel = uname:match("(%S+)%s+(%S+)%s+(%S+)")
