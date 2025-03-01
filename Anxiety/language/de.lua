@@ -3,7 +3,7 @@ Locale = {}
 Locale.Locale = "de_DE";
 
 Locale.Clock = "%H:%M:%S"
-Locale.Date = "%A, %d. %B %Y"
+Locale.Date = "%A, %x"
 
 Locale.System = "System"
 Locale.Host = "Host / User"
