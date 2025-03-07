@@ -15,8 +15,8 @@ Config.Partitions = {
 -- Network interface
 Config.Network = {}
 Config.Network.Interface = "eno1"
-Config.Network.DownloadMaxBytePerSecond = 14417920
-Config.Network.UploadMaxBytesPerSecond = 4063232
+Config.Network.DownloadMaxBytePerSecond = 39321600
+Config.Network.UploadMaxBytesPerSecond = 19660800
 
 -- Background Image
 Config.BackgroundImage = "background.png"

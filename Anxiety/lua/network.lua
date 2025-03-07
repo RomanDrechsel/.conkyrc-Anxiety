@@ -149,7 +149,7 @@ function NET:Ping()
 end
 
 function NET:_getIP()
-    local ip = pipe("wget -q -O- http://ipecho.net/plain; echo &")
+    local ip = pipe("curl https://ipinfo.io/ip")
     if ip then
         self.CurrentIP = ip
     else
