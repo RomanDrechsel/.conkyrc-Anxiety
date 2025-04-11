@@ -149,7 +149,7 @@ function NET:Ping()
 end
 
 function NET:_getIP()
-    local ip = pipe("curl https://ipinfo.io/ip")
+    local ip = pipe("curl -s https://ipinfo.io/ip")
     if ip then
         self.CurrentIP = ip
     else
