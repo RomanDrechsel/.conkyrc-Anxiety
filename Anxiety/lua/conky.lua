@@ -61,7 +61,11 @@ function conky_pre()
         NET:Update()
     end
 
-    local cs = cairo_xlib_surface_create(conky_window.display, conky_window.drawable, conky_window.visual, conky_window.width, conky_window.height)
+    local cs = conky_surface()
+    if not cs then
+        print("No cairo surface")
+        return
+    end
     local cr = cairo_create(cs)
 
     if background == nil and Config.BackgroundImage then
@@ -101,5 +105,4 @@ function conky_pre()
     end
 
     cairo_destroy(cr)
-    cairo_surface_destroy(cs)
 end
