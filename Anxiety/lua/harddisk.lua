@@ -22,7 +22,7 @@ function Disk:Display(cr, y)
                     self.Graphs[i]:Draw(cr, bar_x, y + 6, self._df[part]["percent"])
 
                     Draw:Font(cr, Config.Text.Label)
-                    _, y = Draw:LeftText(cr, part, y)
+                    y = select(2, Draw:LeftText(cr, part, y))
                     y = Draw:Row(cr, y, usage, Config.Text.Info, nil, nil, self._df[part]["percent"] .. "%", nil)
                     i = i + 1
                 end
@@ -34,7 +34,7 @@ function Disk:Display(cr, y)
 end
 
 function Disk:Temp()
-    if Sensors and Sensors.Json  then
+    if Sensors and Sensors.Json then
         local curr = Sensors.findNumber(nil, "nvme-pci-", "Composite", "temp1_input");
         if curr then
             return toInt(curr) .. "°C"

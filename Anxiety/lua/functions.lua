@@ -22,9 +22,9 @@ function format_bytes(bytes)
         if bytes > 1073741824 then
             return string.format("%.2f GiB", bytes / 1073741824)
         elseif bytes > 1048576 then
-            return  string.format("%.2f MiB", bytes / 1048576)
+            return string.format("%.2f MiB", bytes / 1048576)
         elseif bytes > 1024 then
-            return  string.format("%.2f KiB", bytes / 1024)
+            return string.format("%.2f KiB", bytes / 1024)
         else
             return string.format("%.0f B", bytes)
         end
@@ -85,7 +85,7 @@ end
 
 function table_copy(t)
     local ret = {};
-    for k,v in pairs(t) do
+    for k, v in pairs(t) do
         if type(v) == "table" then
             ret[k] = table_copy(v);
         else
@@ -121,27 +121,31 @@ function split(str, delimiter)
     if delimiter == nil then
         delimiter = "\n"
     end
-    local result = { }
-    local from  = 1
-    local delim_from, delim_to = string.find( str, delimiter, from  )
+    local result               = {}
+    local from                 = 1
+    local delim_from, delim_to = string.find(str, delimiter, from)
     while delim_from do
-        table.insert( result, string.sub( str, from , delim_from-1 ) )
-        from  = delim_to + 1
-        delim_from, delim_to = string.find( str, delimiter, from  )
+        table.insert(result, string.sub(str, from, delim_from - 1))
+        from                 = delim_to + 1
+        delim_from, delim_to = string.find(str, delimiter, from)
     end
-    table.insert( result, string.sub( str, from  ) )
+    table.insert(result, string.sub(str, from))
     return result
 end
 
 function dump(o)
     if type(o) == 'table' then
-       local s = '{ '
-       for k,v in pairs(o) do
-          if type(k) ~= 'number' then k = '"'..k..'"' end
-          s = s .. '['..k..'] = ' .. dump(v) .. ','
-       end
-       return s .. '} '
+        local s = '{ '
+        for k, v in pairs(o) do
+            local key = k
+            if type(key) ~= 'number' then
+                key = '"' .. tostring(key) .. '"'
+            end
+            s = s .. '[' .. key .. '] = ' .. dump(v) .. ','
+        end
+
+        return s .. '} '
     else
-       return tostring(o)
+        return tostring(o)
     end
 end
