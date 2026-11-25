@@ -5,10 +5,10 @@ https://conky.cc/
 
 ]] --
 
-pwd = debug.getinfo(1, "S").source:match("@?(.*/)")
+local pwd = debug.getinfo(1, "S").source:match("@?(.*/)")
 package.path = package.path .. ";" .. pwd .. "../?.lua;" .. pwd .. "?.lua"
 
-json = require("json")
+JSON = require("json")
 require("functions")
 require('config')
 require('safe_config')
@@ -16,11 +16,12 @@ Config = safe_config(Config)
 
 require('language/' .. Config.Language)
 require('cairo')
-require('cairo_xlib')
-
 CacheDir = home() .. ".cache/conky/Anxiety/"
 
+require('timer')
 require('draw')
+require('graph_helpers')
+require('themes/theme_nebula')
 require('linegraph')
 require('piegraph')
 require('bargraph')
@@ -35,6 +36,7 @@ require("network")
 require("processes")
 
 local background = nil
+
 
 function conky_pre()
     if conky_window == nil or conky_window.width <= 0 or conky_window.height <= 0 then
@@ -85,19 +87,19 @@ function conky_pre()
             y = System:Display(cr, y)
         end
         if CPU and y < conky_window.height then
-            y = CPU:Display(cr, y)
+            y = CPU:Display(cr, y) or 0
         end
         if RAM and y < conky_window.height then
-            y = RAM:Display(cr, y)
+            y = RAM:Display(cr, y) or 0
         end
         if GPU and y < conky_window.height then
-            y = GPU:Display(cr, y)
+            y = GPU:Display(cr, y) or 0
         end
         if Disk and y < conky_window.height then
             y = Disk:Display(cr, y)
         end
         if NET and y < conky_window.height then
-            y = NET:Display(cr, y)
+            y = NET:Display(cr, y) or 0
         end
         if Processes then
             y = Processes:Display(cr, y)

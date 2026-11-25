@@ -13,6 +13,7 @@ function CPU:new()
         self._configSmallGraph.Graph.Label.FontSize = 12
         self._configSmallGraph.PaddingPercent = 20
     end
+
     if Config.LineGraph.Graph.LineColor and Config.LineGraph.Graph.LineWidth and Config.LineGraph.Graph.LineWidth > 0 then
         self.GraphLine = LineGraph:new(Config.LineGraph, nil, 70)
     end
@@ -31,50 +32,46 @@ function CPU:Display(cr, y)
     y = y + (Config.Padding * 2)
 
     if self.GraphMain then
-        -- Background
+        -- Calculate the core grid dimensions
         local smallGraphWidth = 25
         local smallGraphHeight = 40
+        local spacingX = 7
+        local spacingY = 7
         local rx = Config.MarginX + self.GraphMain.Width + 10
-        local cpuRows = math.ceil((self.CPUCount * smallGraphWidth) / (conky_window.width - rx - Config.MarginX))
+        local availableWidth = conky_window.width - rx - Config.MarginX
+        local graphsPerRow = math.max(1, math.floor((availableWidth + spacingX) / (smallGraphWidth + spacingX)))
+        local showCores = self._configSmallGraph and self.CPUCount > 1
+        local cpuRows = showCores and math.ceil(self.CPUCount / graphsPerRow) or 0
+        local coresHeight = math.max(0, cpuRows * (smallGraphHeight + spacingY) - spacingY)
+        local height = math.max(self.GraphMain.Height, coresHeight)
 
-        local height = cpuRows * (smallGraphHeight + 7)
-        if height < self.GraphMain.Height then
-            height = self.GraphMain.Height
-        end
         Draw:FillRect(cr, Config.MarginX, y, conky_window.width - (2 * Config.MarginX), height, "#00000060")
 
-        -- main cpu
+        -- Draw total CPU utilization
         local util = self:Utilization(0)
         self.GraphMain:Draw(cr, Config.MarginX, y, util, { util .. "%", self:Temp() })
 
-        if self.GraphsSmall == nil then
-            self.GraphsSmall = {}
-        end
+        self.GraphsSmall = self.GraphsSmall or {}
 
-        if self._configSmallGraph and self.CPUCount > 1 then
-            local dx = rx
-            local dy = y
-
-            for i = 1, self.CPUCount, 1 do
-                usage = self:Utilization(i)
+        if showCores then
+            for i = 1, self.CPUCount do
+                local usage = self:Utilization(i)
                 if usage then
-                    if self.GraphsSmall[i] == nil then
-                        table.insert(self.GraphsSmall, PieGraph:new(self._configSmallGraph, smallGraphWidth, smallGraphHeight))
+                    if not self.GraphsSmall[i] then
+                        self.GraphsSmall[i] = PieGraph:new(self._configSmallGraph, smallGraphWidth, smallGraphHeight)
                     end
+
+                    local column = (i - 1) % graphsPerRow
+                    local row = math.floor((i - 1) / graphsPerRow)
+                    local dx = rx + column * (smallGraphWidth + spacingX)
+                    local dy = y + row * (smallGraphHeight + spacingY)
+
                     self.GraphsSmall[i]:Draw(cr, dx, dy, usage, usage .. "%")
-                    dx = dx + self.GraphsSmall[i].Width + 7
-                    if dx > conky_window.width - Config.MarginX - self.GraphsSmall[i].Width then
-                        dx = rx
-                        dy = dy + self.GraphsSmall[i].Height + 7
-                    end
                 end
             end
-            if #self.GraphsSmall > 0 then
-                dy = dy + self.GraphsSmall[1].Height + 7
-            end
         end
 
-        y = y + height
+        y = y + height + spacingY
 
         if self.GraphLine then
             y = self.GraphLine:Draw(cr, Config.MarginX, y, util)
@@ -86,7 +83,7 @@ end
 
 function CPU:Temp()
     if Sensors and Sensors.Json then
-        local temp = Sensors.Json["k10temp-pci-00c3"]["Tctl"]["temp1_input"];
+        local temp = Sensors:FindNumber(nil, "k10temp-", "Tctl", "temp1_input")
         if temp then
             return toInt(temp) .. "°C"
         end

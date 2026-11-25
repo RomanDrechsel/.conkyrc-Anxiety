@@ -20,19 +20,13 @@ function format_bytes(bytes)
     if bytes then
         bytes = tonumber(trim(bytes))
         if bytes > 1073741824 then
-            local gigabytes = bytes / 1073741824
-            local str = string.format("%.2f", gigabytes)
-            return str .. " Gb"
+            return string.format("%.2f GiB", bytes / 1073741824)
         elseif bytes > 1048576 then
-            local megabytes = bytes / 1048576
-            local str = string.format("%.2f", megabytes)
-            return str .. " Mb"
+            return  string.format("%.2f MiB", bytes / 1048576)
         elseif bytes > 1024 then
-            local kilobytes = bytes / 1048576
-            local str = string.format("%.2f", kilobytes)
-            return str .. " Kb"
-        else    
-            return bytes .. " b"
+            return  string.format("%.2f KiB", bytes / 1024)
+        else
+            return string.format("%.0f B", bytes)
         end
     end
     return -1
@@ -46,37 +40,39 @@ function home()
     return ""
 end
 
-function dir_exists(dir)
-    if pipe("[ -d '" .. dir .. "' ]") then
-        return true
-    else 
-        return false
-    end
-end
-
-function file_exists(file)
-    if pipe("[ -f '" .. file .. "' ]") then
-        return true
-    else 
-        return false
-    end
-end
-
 function pipe(command)
-    local p = io.popen(command)
-    if p then
-        local output = p:read("*a")
-        p:close()
-        return trim(output)
+    local handle = io.popen(command, "r")
+
+    if not handle then
+        return nil
     end
-    return ""
+
+    local output = handle:read("*a")
+    local success, reason, code = handle:close()
+
+    if output then
+        output = output:gsub("[\r\n]+$", "")
+    end
+
+    return output
+end
+
+function shell_quote(value)
+    return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
 end
 
 function package_installed(package)
-    if pipe("which " .. package) then
-        return true
-    end
-    return false
+    return os.execute(
+        "pacman -Q " .. shell_quote(package) .. " >/dev/null 2>&1"
+    ) == true
+end
+
+function dir_exists(path)
+    return os.execute("test -d " .. shell_quote(path)) == true
+end
+
+function file_exists(path)
+    return os.execute("test -f " .. shell_quote(path)) == true
 end
 
 function toInt(number)

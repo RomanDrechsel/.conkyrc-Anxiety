@@ -58,8 +58,8 @@ function Draw:PointText(cr, text, center_x, center_y)
     local extents = cairo_text_extents_t:create()
     cairo_text_extents(cr, text, extents)
 
-    x = center_x - (extents.width / 2)
-    y = center_y - (getFontHeight(cr) / 2)
+    local x = center_x - (extents.width / 2)
+    local y = center_y - (getFontHeight(cr) / 2)
     return self:Text(cr, text, x, y)
 end
 

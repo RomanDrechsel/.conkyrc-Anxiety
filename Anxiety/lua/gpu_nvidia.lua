@@ -15,8 +15,11 @@ function GPU:Display(cr, y)
 
     local values = pipe("nvidia-smi --query-gpu=driver_version,name,temperature.gpu,utilization.gpu,memory.used,memory.total,fan.speed,power.draw,power.limit --format=csv,noheader,nounits")
     local fields = {}
-    for field in string.gmatch(values, "([^,]+)") do
-        table.insert(fields, field:match("^%s*(.-)%s*$"))
+
+    if values then
+        for field in string.gmatch(values, "([^,]*)[,]?") do
+            table.insert(fields, field:match("^%s*(.-)%s*$"))
+        end
     end
 
     -- card name
@@ -24,12 +27,12 @@ function GPU:Display(cr, y)
         Draw:Font(cr, Config.Text.Special)
     end
 
-    _, y = Draw:LeftText(cr, fields[2], y)
+    _, y = Draw:LeftText(cr, fields[2] or "N/A", y)
     y = y + 5
 
     -- driver version
     Draw:Font(cr, Config.Text.Info)
-    Draw:RightText(cr, fields[1], y2)
+    Draw:RightText(cr, fields[1] or "N/A", y2)
 
     -- graph
     if self.GraphLine then

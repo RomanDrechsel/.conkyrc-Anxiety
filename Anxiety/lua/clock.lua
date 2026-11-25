@@ -9,6 +9,7 @@ function Clock:Display(cr, y)
 
     if Config.Date then
         Draw:Font(cr, Config.Date)
+        y = y + 10
         _, y = Draw:CenterText(cr, os.date(Locale.Date), y)
     end
 

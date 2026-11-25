@@ -81,7 +81,7 @@ function RAM:UsageSwap()
         size = format_bytes(self.SwapTotal)
     end
     if size and self.SwapUsed > 0 then
-        used = format_bytes(self.SwapTotal)
+        used = format_bytes(self.SwapUsed)
     end
 
     if used and size then

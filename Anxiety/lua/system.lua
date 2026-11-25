@@ -69,7 +69,7 @@ function uptime()
         local uptimeSeconds = os.time() - startTimestamp
 
         local days = math.floor(uptimeSeconds / 3600 / 24)
-        local hours = math.floor(uptimeSeconds / 3600)
+        local hours = math.floor(uptimeSeconds / 3600) % 24
         local minutes = math.floor((uptimeSeconds % 3600) / 60)
         local seconds = uptimeSeconds % 60
 

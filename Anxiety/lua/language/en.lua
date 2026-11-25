@@ -26,6 +26,7 @@ Locale.Disk = "Hard disk"
 Locale.Network = "Network"
 Locale.ExternIP = "External IP"
 Locale.Ping = "Ping"
+Locale.NoNetwork = "No internet!"
 
 Locale.Name = "Name"
 Locale.PID = "PID"

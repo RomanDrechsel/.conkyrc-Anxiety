@@ -125,8 +125,8 @@ end
 
 function GPU:Temp()
     if Sensors and Sensors.Json then
-        local edge = Sensors.Json["amdgpu-pci-0300"]["edge"]["temp1_input"];
-        local junction = Sensors.Json["amdgpu-pci-0300"]["junction"]["temp2_input"];
+        local edge = Sensors:FindNumber(nil, "amdgpu-pci-0", "edge", "temp1_input")
+        local junction = Sensors:FindNumber(nil, "amdgpu-pci-", "junction", "temp2_input")
 
         if edge or junction then
             if edge then
@@ -174,7 +174,7 @@ end
 
 function GPU:MemTemp()
     if Sensors and Sensors.Json then
-        local temp = Sensors.Json["amdgpu-pci-0300"]["mem"]["temp3_input"];
+        local temp = Sensors.findNumber(nil, "amdgpu-pci-", "mem", "temp3_input")
         if temp then
             return toInt(temp) .. "°C"
         end
@@ -185,8 +185,8 @@ end
 
 function GPU:Fan()
     if Sensors and Sensors.Json then
-        local curr = Sensors.Json["amdgpu-pci-0300"]["fan1"]["fan1_input"];
-        local max =  Sensors.Json["amdgpu-pci-0300"]["fan1"]["fan1_max"];
+        local curr = Sensors.findNumber(nil,"amdgpu-pci-", "fan1", "fan1_input");
+        local max =  Sensors.findNumber(nil, "amdgpu-pci-", "fan1", "fan1_max");
 
         if curr then
             curr = toInt(curr)
@@ -207,8 +207,8 @@ end
 
 function GPU:Power()
     if Sensors and Sensors.Json then
-        local curr = Sensors.Json["amdgpu-pci-0300"]["PPT"]["power1_average"];
-        local max =  Sensors.Json["amdgpu-pci-0300"]["PPT"]["power1_cap"];
+        local curr = Sensors.findNumber(nil, "amdgpu-pci-", "PPT", "power1_average")
+        local max =  Sensors.findNumber(nil, "amdgpu-pci-", "PPT", "power1_cap")
 
         if curr then
             curr = toInt(curr)

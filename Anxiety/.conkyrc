@@ -1,9 +1,26 @@
-local pipe = io.popen("xrandr --current | grep '*' | uniq | awk 'NR==2 {print $1}' | cut -d 'x' -f 2")
-local height = 1450
-if pipe then
-	height = tonumber(pipe:read("*a"))
-	pipe:close()
+local function getRightmostMonitorHeight(fallback)
+    local handle = io.popen([[
+        kscreen-doctor -j 2>/dev/null | jq -r '
+            [.outputs[] | select(.connected and .enabled)]
+            | max_by(.pos.x)
+            | .size.height // empty
+        '
+    ]])
+
+    if not handle then
+        return fallback
+    end
+
+    local height = tonumber(handle:read("*a"))
+    handle:close()
+
+    if height and height > 0 then
+        return math.floor(height + 0.5)
+    end
+
+    return fallback
 end
+local height = getRightmostMonitorHeight(1440)
 
 conky.config = {
     lua_load = '/mnt/zusatz/Coding/Github/MyConky/Anxiety/lua/conky.lua', --lua_load
@@ -17,13 +34,13 @@ conky.config = {
 	text_buffer_size = 32768,
 	imlib_cache_size = 0,
 	own_window = true,
-	own_window_type = 'panel',
+	own_window_type = 'dock',
+    own_window_class = 'override',
     own_window_namespace = 'dock',
-	own_window_class = 'override',
 	own_window_hints = 'above,sticky,skip_taskbar,skip_pager',
 	own_window_color = '#00000000',
 	show_graph_scale = false,
-	alignment = 'middle_right',
+	alignment = 'top_right',
 	gap_x = 5,
 	gap_y = 0,
 	xinerama_head = 1,
@@ -31,8 +48,11 @@ conky.config = {
 	maximum_width = 350,
     minimum_width = 350,
 	minimum_height = height,
-    output_backend = 'x11',
-	lua_draw_hook_pre = 'pre'
+    output_backend = 'wayland',
+	lua_draw_hook_pre = 'pre',
+    border_inner_margin = 0,
+    border_outer_margin = 0,
+    border_width = 0,
 }
 
 conky.text = [[
