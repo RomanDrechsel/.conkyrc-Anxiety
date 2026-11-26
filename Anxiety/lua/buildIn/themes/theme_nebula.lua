@@ -6,37 +6,29 @@ local colors = {
     Blue = "#4788F5",
     Violet = "#B49AFF",
     Text = "#E1EFFA",
-    Muted = "#BACDDC",
+    Muted = "FF9BABB8",
     Amber = "FFFA9614"
 }
 
 local headerFont = "DejaVu Sans"
 local dataFont = "DejaVu Sans Mono"
 
-local function font(family, size, color, bold)
-    return {
-        FontFamily = family,
-        FontSize = size,
-        FontColor = color,
-        Bold = bold
-    }
-end
-
 Theme = {
     Colors = colors,
-    BackgroundImage = "background.png",
+    --BackgroundImage = "background.png",
+    BackgroundImage = nil,
     MarginX = 10,
     MarginY = 10,
     Padding = 3,
 
-    Clock = font("EP Boxi", 40, colors.Cyan, false),
-    Date = font(headerFont, 16, colors.Muted, false),
-    Header = font(headerFont, 20, colors.Cyan, true),
+    Clock = _ENV.font("EP Boxi", 40, colors.Cyan, false),
+    Date = _ENV.font(headerFont, 16, colors.Muted, false),
+    Header = _ENV.font(headerFont, 20, colors.Cyan, true),
     Text = {
-        Label = font(headerFont, 14, colors.Muted, false),
-        Info = font(dataFont, 14, colors.Text, false),
-        Special = font(dataFont, 15, colors.Violet, true),
-        Large = font(dataFont, 17, colors.Text, true)
+        Label = _ENV.font(headerFont, 14, colors.Muted, false),
+        Info = _ENV.font(dataFont, 14, colors.Text, false),
+        Special = _ENV.font(dataFont, 15, colors.Violet, true),
+        Large = _ENV.font(dataFont, 17, colors.Text, true)
     },
 
     LineGraph = {
@@ -74,8 +66,8 @@ Theme = {
             PaddingPercent = 5,
             StartAngle = -90,
             ShowValue = false,
-            Label = font(dataFont, 12, colors.Muted, false),
-            ValueFont = font(dataFont, 16, colors.Text, true)
+            Label = _ENV.font(dataFont, 12, colors.Muted, false),
+            ValueFont = _ENV.font(dataFont, 16, colors.Text, true)
         },
         Border = {
             Color = "#007000",

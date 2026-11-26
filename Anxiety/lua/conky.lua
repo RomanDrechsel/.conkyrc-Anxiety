@@ -5,35 +5,43 @@ https://conky.cc/
 
 ]] --
 
-local pwd = debug.getinfo(1, "S").source:match("@?(.*/)")
-package.path = package.path .. ";" .. pwd .. "../?.lua;" .. pwd .. "?.lua"
+local pwd = debug.getinfo(1, "S").source:sub(2):match("^.*/") or "./"
+package.path = pwd .. "?.lua;" .. package.path
 
-JSON = require("json")
-require("functions")
+JSON = require("helpers.json")
+require("helpers.functions")
+local languageLoader = require("loader.language_loader")
+local themeLoader = require("loader.theme_loader")
+local root = pwd .. "../"
+
 require('config')
+Locale = languageLoader:load(root, Config.Language)
+print("[Anxiety] Using localization: '" .. Config.Language .. "'")
+Theme = themeLoader:load(root, Config.Theme)
+print("[Anxiety] Using theme: '" .. Config.Theme .. "'")
+themeLoader:apply(Config, Theme)
+
 require('safe_config')
 Config = safe_config(Config)
 
-require('language/' .. Config.Language)
 require('cairo')
 CacheDir = home() .. ".cache/conky/Anxiety/"
 
-require('timer')
-require('draw')
-require('graph_helpers')
-require('themes/theme_nebula')
-require('linegraph')
-require('piegraph')
-require('bargraph')
-require("sensors")
-require('clock')
-require('system')
-require("gpu_nvidia")
-require("cpu")
-require("harddisk")
-require("ram")
-require("network")
-require("processes")
+require('helpers.timer')
+require('helpers.draw')
+require('graphs.graph_helpers')
+require('graphs.linegraph')
+require('graphs.piegraph')
+require('graphs.bargraph')
+require("helpers.sensors")
+require('widgets.clock')
+require('widgets.system')
+require("widgets.gpu_nvidia")
+require("widgets.cpu")
+require("widgets.harddisk")
+require("widgets.ram")
+require("widgets.network")
+require("widgets.processes")
 
 local background = nil
 

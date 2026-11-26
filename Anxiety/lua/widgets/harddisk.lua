@@ -10,7 +10,7 @@ function Disk:Display(cr, y)
 
         local i = 1
         Draw:Font(cr, Config.Text.Label)
-        local bar_x = textWidth(cr, Config.Partitions) + Config.MarginX + 15
+        local bar_x = TextWidth(cr, Config.Partitions) + Config.MarginX + 15
         for _, part in ipairs(Config.Partitions) do
             if self._df[part] then
                 local usage = self:Usage(self._df[part]["used"], self._df[part]["size"])

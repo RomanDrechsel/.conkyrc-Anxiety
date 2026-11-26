@@ -4,41 +4,30 @@
 Draw = {}
 
 function Draw:Background(cr, image)
-    if theme.UseOriginalBackground then
-        return originalBackground(self, cr, image)
+    if not cr or not image then
+        return
     end
-
-    local w, h = conky_window.width, conky_window.height
+    local w, h = cairo_image_surface_get_width(image), cairo_image_surface_get_height(image)
     if w <= 0 or h <= 0 then
         return
     end
-
     cairo_save(cr)
-    local p = cairo_pattern_create_linear(0, 0, w, h)
-    cairo_pattern_add_color_stop_rgba(p, 0, 0.055, 0.10, 0.17, 1)
-    cairo_pattern_add_color_stop_rgba(p, 1, 0.025, 0.045, 0.085, 1)
-    cairo_set_source(cr, p)
-    cairo_pattern_destroy(p)
+    cairo_scale(cr, conky_window.width / w, conky_window.height / h)
+    cairo_set_source_surface(cr, image, 0, 0)
     cairo_paint(cr)
-    self:Color(cr, '#55E6FF40')
-    cairo_new_path(cr)
-    cairo_rectangle(cr, 0, 0, 2, h)
-    cairo_fill(cr)
     cairo_restore(cr)
 end
 
 function Draw:Text(cr, text, x, y)
+    text = tostring(text or '')
     local extents = cairo_text_extents_t:create()
     cairo_text_extents(cr, text, extents)
-
-    y = y + getFontHeight(cr)
-
+    y = y + GetFontHeight(cr)
+    cairo_new_path(cr)
     cairo_move_to(cr, x, y)
     cairo_show_text(cr, text)
-    cairo_stroke(cr)
-
-    x = x + extents.x_advance
-    return x, y
+    cairo_new_path(cr)
+    return x + extents.x_advance, y
 end
 
 function Draw:LeftText(cr, text, y)
@@ -69,14 +58,15 @@ function Draw:RightText(cr, text, y, right_x)
     return self:Text(cr, text, x, y)
 end
 
-function Draw:PointText(cr, text, center_x, center_y)
+function Draw:PointText(cr, text, cx, cy)
+    text = tostring(text or '')
     local extents = cairo_text_extents_t:create()
     cairo_text_extents(cr, text, extents)
-
-    local x = center_x - (extents.width / 2)
-    local y = center_y - (getFontHeight(cr) / 2)
+    local x = cx - extents.width / 2
+    local y = cy - GetFontHeight(cr) / 2
     return self:Text(cr, text, x, y)
 end
+
 
 function Draw:Row(cr, y, text_left, font_left, text_center, font_center, text_right, font_right)
     local bottom = y
@@ -129,7 +119,7 @@ end
 
 function Draw:Color(cr, color)
     if color then
-        local c1, c2, c3, c4 = hexToRGBA(color)
+        local c1, c2, c3, c4 = HexToRGBA(color)
         if c4 >= 1 then
             cairo_set_source_rgb(cr, c1, c2, c3)
         else
@@ -145,7 +135,7 @@ function Draw:Header(cr, text, y)
     cairo_save(cr)
     self:Font(cr, Config.Header)
     local x, bottom = self:Text(cr, tostring(text or ''), left + 9, y)
-    self:Color(cr, palette.Cyan)
+    self:Color(cr, Theme.Colors.Cyan)
     cairo_new_path(cr)
     cairo_rectangle(cr, left, bottom - 10, 3, 10)
     cairo_fill(cr)
@@ -270,7 +260,7 @@ function Draw:Arc(cr, cx, cy, r, color, linewidth, a_start, a_end)
     cairo_stroke(cr)
 end
 
-function textWidth(cr, texts)
+function TextWidth(cr, texts)
     if type(texts) ~= "table" then
         texts = { texts }
     end
@@ -287,7 +277,7 @@ function textWidth(cr, texts)
     return width
 end
 
-function hexToRGBA(hex)
+function HexToRGBA(hex)
     if hex == nil then
         return 1, 1, 1, 1
     end
@@ -307,7 +297,7 @@ function hexToRGBA(hex)
     return r, g, b, a
 end
 
-function getFontHeight(cr)
+function GetFontHeight(cr)
     local font_extents = cairo_font_extents_t.create()
     cairo_font_extents(cr, font_extents)
     return font_extents.height

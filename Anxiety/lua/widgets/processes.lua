@@ -17,7 +17,7 @@ function Processes:Display(cr, y)
 
     Draw:Font(cr, Config.Text.Info)
     for i=1,10,1 do
-        if y + getFontHeight(cr) > conky_window.height then
+        if y + GetFontHeight(cr) > conky_window.height then
             break
         end
 

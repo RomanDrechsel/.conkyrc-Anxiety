@@ -1,5 +1,3 @@
-print("Use localization \"de\"")
-
 Locale = {}
 
 Locale.Locale = "de_DE";
@@ -32,7 +30,6 @@ Locale.NoNetwork = "Kein Internet!"
 
 Locale.Name = "Name"
 Locale.PID = "PID"
-Locale.CPU = "CPU"
 Locale.MEM = "MEM"
 
 return Locale;

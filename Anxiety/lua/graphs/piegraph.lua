@@ -76,7 +76,7 @@ function PieGraph:Draw(cr, x, y, data, label)
         if type(label) ~= 'table' then label = { label } end
         Draw:Font(cr, g.Label)
         for i, line in ipairs(label) do
-            Draw:PointText(cr, line, cx, cy + radius * 1.4 + getFontHeight(cr) * (i - 1))
+            Draw:PointText(cr, line, cx, cy + radius * 1.4 + GetFontHeight(cr) * (i - 1))
         end
     end
     cairo_restore(cr)
