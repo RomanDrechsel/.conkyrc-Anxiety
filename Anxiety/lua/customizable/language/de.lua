@@ -1,3 +1,5 @@
+print("Use localization \"de\"")
+
 Locale = {}
 
 Locale.Locale = "de_DE";
@@ -33,4 +35,4 @@ Locale.PID = "PID"
 Locale.CPU = "CPU"
 Locale.MEM = "MEM"
 
-print("Locale: de");
+return Locale;

@@ -47,8 +47,10 @@ function conky_pre()
         Sensors:Update()
     end
 
-    if GPU then
-        GPU:Update()
+    if NVIDIA_GPU then
+        NVIDIA_GPU:Update()
+    elseif AMD_GPU then
+        AMD_GPU:Update()
     end
 
     if Disk then
@@ -92,8 +94,13 @@ function conky_pre()
         if RAM and y < conky_window.height then
             y = RAM:Display(cr, y) or 0
         end
-        if GPU and y < conky_window.height then
-            y = GPU:Display(cr, y) or 0
+
+        if y < conky_window.height then
+            if NVIDIA_GPU then
+                y = NVIDIA_GPU:Display(cr, y) or 0
+            elseif AMD_GPU then
+                y = AMD_GPU:Display(cr, y) or 0
+            end
         end
         if Disk and y < conky_window.height then
             y = Disk:Display(cr, y)

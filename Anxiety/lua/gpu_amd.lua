@@ -1,6 +1,6 @@
-GPU = { Path = nil, DriverVersion = "", CardName = "" }
+AMD_GPU = { Path = nil, DriverVersion = "", CardName = "" }
 
-function GPU:new()
+function AMD_GPU:new()
     self.Path = "/sys/class/drm/"
     local card = pipe("ls " .. self.Path .. " | grep -E '^card[0-9]+$' | tail -n 1")
     if card == nil or string.len(card) == 0 then
@@ -12,7 +12,7 @@ function GPU:new()
     if dir_exists(self.Path) then
         print("AMD-GPU Device found: " .. self.Path)
     else
-        GPU.Path = nil
+        AMD_GPU.Path = nil
         print("No AMD-GPU Device found!")
     end
 
@@ -38,7 +38,7 @@ function GPU:new()
     return self
 end
 
-function GPU:Display(cr, y)
+function AMD_GPU:Display(cr, y)
     y = Draw:Header(cr, Locale.VideoCard, y)
 
     y2 = y
@@ -96,16 +96,16 @@ function GPU:Display(cr, y)
     return y
 end
 
-function GPU:Update()
+function AMD_GPU:Update()
     if os.time() % 60 == 0 then
         self:_runOncePerMin()
     end
 end
 
-function GPU:VRAM()
+function AMD_GPU:VRAM()
     if self.Path then
         local used = pipe("cat " .. self.Path .. "mem_info_vram_used")
-        local max =  pipe("cat " .. self.Path .. "mem_info_vram_total")
+        local max = pipe("cat " .. self.Path .. "mem_info_vram_total")
 
         if used then
             used = format_bytes(used)
@@ -123,7 +123,7 @@ function GPU:VRAM()
     return "-"
 end
 
-function GPU:Temp()
+function AMD_GPU:Temp()
     if Sensors and Sensors.Json then
         local edge = Sensors:FindNumber(nil, "amdgpu-pci-0", "edge", "temp1_input")
         local junction = Sensors:FindNumber(nil, "amdgpu-pci-", "junction", "temp2_input")
@@ -150,7 +150,7 @@ function GPU:Temp()
     return ""
 end
 
-function GPU:Utilization()
+function AMD_GPU:Utilization()
     if self.Path then
         local curr = pipe("grep -Pom 1 '\\d+:\\s\\K(\\d+)(?=.*\\*$)' " .. self.Path .. "pp_dpm_sclk")
         local max = pipe("cat " .. self.Path .. "pp_dpm_sclk | tail -1 | cut -c4-7")
@@ -172,7 +172,7 @@ function GPU:Utilization()
     return "-"
 end
 
-function GPU:MemTemp()
+function AMD_GPU:MemTemp()
     if Sensors and Sensors.Json then
         local temp = Sensors.findNumber(nil, "amdgpu-pci-", "mem", "temp3_input")
         if temp then
@@ -183,10 +183,10 @@ function GPU:MemTemp()
     return ""
 end
 
-function GPU:Fan()
+function AMD_GPU:Fan()
     if Sensors and Sensors.Json then
-        local curr = Sensors.findNumber(nil,"amdgpu-pci-", "fan1", "fan1_input");
-        local max =  Sensors.findNumber(nil, "amdgpu-pci-", "fan1", "fan1_max");
+        local curr = Sensors.findNumber(nil, "amdgpu-pci-", "fan1", "fan1_input");
+        local max = Sensors.findNumber(nil, "amdgpu-pci-", "fan1", "fan1_max");
 
         if curr then
             curr = toInt(curr)
@@ -205,10 +205,10 @@ function GPU:Fan()
     return "-"
 end
 
-function GPU:Power()
+function AMD_GPU:Power()
     if Sensors and Sensors.Json then
         local curr = Sensors.findNumber(nil, "amdgpu-pci-", "PPT", "power1_average")
-        local max =  Sensors.findNumber(nil, "amdgpu-pci-", "PPT", "power1_cap")
+        local max = Sensors.findNumber(nil, "amdgpu-pci-", "PPT", "power1_cap")
 
         if curr then
             curr = toInt(curr)
@@ -226,7 +226,7 @@ function GPU:Power()
     return "-"
 end
 
-function GPU:_runOncePerMin()
+function AMD_GPU:_runOncePerMin()
     local glxinfo = pipe("glxinfo -B | grep -A 10 \"Extended renderer info\" | grep -E \"Version:\"")
     if glxinfo then
         local driver = glxinfo:match("Version:(.+)")
@@ -236,4 +236,4 @@ function GPU:_runOncePerMin()
     end
 end
 
-GPU:new()
+AMD_GPU:new()

@@ -1,6 +1,6 @@
-GPU = { }
+NVIDIA_GPU = {}
 
-function GPU:new()
+function NVIDIA_GPU:new()
     if Config.LineGraph.Graph.LineColor and Config.LineGraph.Graph.LineWidth and Config.LineGraph.Graph.LineWidth > 0 then
         self.GraphLine = LineGraph:new(Config.LineGraph, nil, 60)
     end
@@ -8,12 +8,13 @@ function GPU:new()
     return self
 end
 
-function GPU:Display(cr, y)
+function NVIDIA_GPU:Display(cr, y)
     y = Draw:Header(cr, Locale.VideoCard, y)
 
     local y2 = y
 
-    local values = pipe("nvidia-smi --query-gpu=driver_version,name,temperature.gpu,utilization.gpu,memory.used,memory.total,fan.speed,power.draw,power.limit --format=csv,noheader,nounits")
+    local values = pipe(
+        "nvidia-smi --query-gpu=driver_version,name,temperature.gpu,utilization.gpu,memory.used,memory.total,fan.speed,power.draw,power.limit --format=csv,noheader,nounits")
     local fields = {}
 
     if values then
@@ -40,7 +41,8 @@ function GPU:Display(cr, y)
     end
 
     -- Utilization / Temperature
-    y = Draw:Row(cr, y, Locale.GPU, Config.Text.Label, tonumber(fields[3]) .. "°C", Config.Text.Info, tonumber(fields[4]) .. "%", nil);
+    y = Draw:Row(cr, y, Locale.GPU, Config.Text.Label, tonumber(fields[3]) .. "°C", Config.Text.Info,
+        tonumber(fields[4]) .. "%", nil);
 
     -- Memory
     y = Draw:Row(cr, y, Locale.Memory, Config.Text.Label, self:MemTemp(), Config.Text.Info, self:VRAM(fields), nil);
@@ -54,12 +56,15 @@ function GPU:Display(cr, y)
     return y
 end
 
-function GPU:Update()
+function NVIDIA_GPU:Update()
 end
 
-
-function GPU:MemTemp()
+function NVIDIA_GPU:MemTemp()
     local temp_output = pipe("nvidia-smi -q -d TEMPERATURE")
+    if (temp_output == nil) then
+        return ""
+    end
+
     local mem_temp = temp_output:match("Memory Temperature%s*:%s*(%d+)%s*C")
 
     if mem_temp then
@@ -69,13 +74,13 @@ function GPU:MemTemp()
     end
 end
 
-function GPU:VRAM(fields)
+function NVIDIA_GPU:VRAM(fields)
     return tonumber(fields[5]) .. " MB / " .. tonumber(fields[6]) .. " MB"
 end
 
-function GPU:Power(fields)
+function NVIDIA_GPU:Power(fields)
     local curr = tonumber(fields[8])
-    local max =  tonumber(fields[9])
+    local max = tonumber(fields[9])
 
     if curr then
         curr = toInt(curr)
@@ -90,4 +95,4 @@ function GPU:Power(fields)
     end
 end
 
-GPU:new()
+NVIDIA_GPU:new()

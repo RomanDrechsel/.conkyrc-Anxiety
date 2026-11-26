@@ -1,0 +1,22 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Tabby: Workspace Service",
+            "type": "shell",
+            "command": "/mnt/zusatz/Dokumente/Nextcloud/roman-drechsel.de/Coding/Scripte/coding/tabby-autocomplete/tabby-workspace.sh",
+            "isBackground": true,
+            "runOptions": {
+                "runOn": "folderOpen",
+                "instanceLimit": 1
+            },
+            "problemMatcher": [ ],
+            "presentation": {
+                "reveal": "never",
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": false
+            }
+        }
+    ]
+}

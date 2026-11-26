@@ -4,12 +4,27 @@
 Draw = {}
 
 function Draw:Background(cr, image)
-    if cr and image then
-        cairo_scale(cr, conky_window.width / cairo_image_surface_get_width(image), conky_window.height / cairo_image_surface_get_height(image))
-        cairo_set_source_surface(cr, image, 0, 0)
-        cairo_paint(cr)
-        cairo_identity_matrix(cr)
+    if theme.UseOriginalBackground then
+        return originalBackground(self, cr, image)
     end
+
+    local w, h = conky_window.width, conky_window.height
+    if w <= 0 or h <= 0 then
+        return
+    end
+
+    cairo_save(cr)
+    local p = cairo_pattern_create_linear(0, 0, w, h)
+    cairo_pattern_add_color_stop_rgba(p, 0, 0.055, 0.10, 0.17, 1)
+    cairo_pattern_add_color_stop_rgba(p, 1, 0.025, 0.045, 0.085, 1)
+    cairo_set_source(cr, p)
+    cairo_pattern_destroy(p)
+    cairo_paint(cr)
+    self:Color(cr, '#55E6FF40')
+    cairo_new_path(cr)
+    cairo_rectangle(cr, 0, 0, 2, h)
+    cairo_fill(cr)
+    cairo_restore(cr)
 end
 
 function Draw:Text(cr, text, x, y)
@@ -76,7 +91,7 @@ function Draw:Row(cr, y, text_left, font_left, text_center, font_center, text_ri
         if font_center then
             Draw:Font(cr, font_center)
         end
-        local _,b = Draw:CenterText(cr, text_center, y, -30);
+        local _, b = Draw:CenterText(cr, text_center, y, -30);
         if b > bottom then
             bottom = b
         end
@@ -86,7 +101,7 @@ function Draw:Row(cr, y, text_left, font_left, text_center, font_center, text_ri
         if font_right then
             Draw:Font(cr, font_right)
         end
-        local _,b = Draw:RightText(cr, text_right, y);
+        local _, b = Draw:RightText(cr, text_right, y);
         if b > bottom then
             bottom = b
         end
@@ -124,18 +139,28 @@ function Draw:Color(cr, color)
 end
 
 function Draw:Header(cr, text, y)
-
-    y = y + (3 * Config.Padding)
-
+    y = y + 3 * Config.Padding
+    local left = Config.MarginX
+    local right = conky_window.width - Config.MarginX
+    cairo_save(cr)
     self:Font(cr, Config.Header)
-    local x, y = self:Text(cr, text, Config.MarginX, y)
-    x = x + 10
-
-    self:Line(cr, x, y - 2, -1, y - 2, 2)
-
-    y = y + Config.Padding
-
-    return y
+    local x, bottom = self:Text(cr, tostring(text or ''), left + 9, y)
+    self:Color(cr, palette.Cyan)
+    cairo_new_path(cr)
+    cairo_rectangle(cr, left, bottom - 10, 3, 10)
+    cairo_fill(cr)
+    if x + 9 < right then
+        local p = cairo_pattern_create_linear(x + 9, 0, right, 0)
+        cairo_pattern_add_color_stop_rgba(p, 0, 0.33, 0.90, 1, 0.65)
+        cairo_pattern_add_color_stop_rgba(p, 1, 0.33, 0.90, 1, 0.06)
+        cairo_set_source(cr, p)
+        cairo_pattern_destroy(p)
+        cairo_new_path(cr)
+        cairo_rectangle(cr, x + 9, bottom - 4, right - x - 9, 1)
+        cairo_fill(cr)
+    end
+    cairo_restore(cr)
+    return bottom + Config.Padding
 end
 
 function Draw:Line(cr, x1, y1, x2, y2, linewidth, color)
@@ -196,7 +221,7 @@ function Draw:Polygon(cr, points, color, linewidth)
             break
         end
 
-        cairo_line_to(cr, points[i], points[i+1])
+        cairo_line_to(cr, points[i], points[i + 1])
         i = i + 2
     end
     cairo_stroke(cr)
@@ -217,7 +242,7 @@ function Draw:FillPolygon(cr, points, color)
             break
         end
 
-        cairo_line_to(cr, points[i], points[i+1])
+        cairo_line_to(cr, points[i], points[i + 1])
         i = i + 2
     end
     cairo_fill(cr)
