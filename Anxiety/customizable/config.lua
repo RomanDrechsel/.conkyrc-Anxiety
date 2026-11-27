@@ -1,4 +1,5 @@
 return {
+    Language = "de",
     Partitions = {
         "/",
         "/mnt/zusatz",

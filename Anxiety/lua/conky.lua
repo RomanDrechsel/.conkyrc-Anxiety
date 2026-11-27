@@ -13,8 +13,6 @@ require("helpers.functions")
 local root = pwd .. "../"
 
 require('config')
-Locale = require("loader.language_loader"):load(root, Config.Language)
-
 local ConfigLoader = require("loader.config_loader")
 local configLoader = ConfigLoader:new(pwd .. "buildIn/", pwd .. "../customizable/")
 configLoader.Debug = true
@@ -26,6 +24,8 @@ Theme = themeLoader:load(root, Config.Theme)
 themeLoader:apply(Config, Theme)
 
 Config = configLoader:finalize(Config)
+
+Locale = require("loader.language_loader"):load(root, Config.Language)
 
 print("[Anxiety] Using localization: '" .. Config.Language .. "'")
 print("[Anxiety] Using theme: '" .. Config.Theme .. "'")
