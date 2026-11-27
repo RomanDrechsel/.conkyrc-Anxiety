@@ -1,26 +1,14 @@
-local function getRightmostMonitorHeight(fallback)
-    local handle = io.popen([[
-        kscreen-doctor -j 2>/dev/null | jq -r '
-            [.outputs[] | select(.connected and .enabled)]
-            | max_by(.pos.x)
-            | .size.height // empty
-        '
-    ]])
+local configPath = debug.getinfo(1, "S").source:sub(2)
+local handle = assert(io.popen("dirname \"$(readlink -f " .. string.format("%q", configPath) .. ")\""))
+local root = handle:read("*l")
+handle:close()
 
-    if not handle then
-        return fallback
-    end
+assert(root and root ~= "", "Unable to resolve configuration directory")
+dofile(root .. "/lua/helpers/init_functions.lua")
+local monitor = GetRightmostMonitor()
+local geometry = GetAvailableScreenGeometry(monitor)
+local height = geometry and geometry.Height or 1440
 
-    local height = tonumber(handle:read("*a"))
-    handle:close()
-
-    if height and height > 0 then
-        return math.floor(height + 0.5)
-    end
-
-    return fallback
-end
-local height = getRightmostMonitorHeight(1440)
 
 conky.config = {
     lua_load = '/mnt/zusatz/Coding/Github/MyConky/Anxiety/lua/conky.lua', --lua_load
@@ -38,18 +26,17 @@ conky.config = {
     own_window_class = 'Anxiety',
     own_window_namespace = 'dock',
 	own_window_hints = 'above,sticky,skip_taskbar,skip_pager',
-    own_window_transparent = false,
-    own_window_color = '#080F1C',
+    own_window_color = '#D9080F1C',
 	show_graph_scale = false,
-	alignment = 'top_right',
-	gap_x = 5,
-	gap_y = 0,
-	xinerama_head = 1,
+	alignment = 'middle_right',
+	gap_x = 0,
+	gap_y = -360,
 	use_xft = true,
 	maximum_width = 350,
     minimum_width = 350,
-	minimum_height = height,
-    output_backend = 'x11',
+	minimum_height = 1384,
+    output_backend = 'wayland',
+    display = monitor,
 	lua_draw_hook_pre = 'pre',
     border_inner_margin = 0,
     border_outer_margin = 0,
