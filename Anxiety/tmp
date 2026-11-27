@@ -1,0 +1,69 @@
+[2026-11-27 18:32:04.766] [info ] [src/system-details.cc:177] 'KDE' Wayland session running
+[2026-11-27 18:32:04.768] [debug] [src/conky.cc:2061:load_config_file] [init::load_config] reading contents from config file '.conkyrc'
+[2026-11-27 18:32:04.786] [info ] [src/conky.cc:2363:initialisation] forked to background, pid is 597266
+
+[2026-11-27 18:32:04.812] [debug] [src/output/display-output.cc:60:initialize_display_outputs] [init] found display output 'wayland'
+[2026-11-27 18:32:04.812] [debug] [src/output/display-output.cc:60:initialize_display_outputs] [init] found display output 'x11'
+[2026-11-27 18:32:04.812] [debug] [src/output/display-output.cc:60:initialize_display_outputs] [init] found display output 'file'
+[2026-11-27 18:32:04.812] [debug] [src/output/display-output.cc:60:initialize_display_outputs] [init] found display output 'console'
+[2026-11-27 18:32:04.813] [debug] [src/output/x11.cc:440:update_x11_workarea] [init::init_x11] fixed xinerama area to rect(2560x1440 @ 3440, 0)
+[2026-11-27 18:32:04.813] [debug] [src/output/x11.cc:440:update_x11_workarea] [init::x11_init_window] fixed xinerama area to rect(2560x1440 @ 3440, 0)
+[2026-11-27 18:32:04.813] [debug] [src/output/x11.cc:463:find_desktop_window] [init::x11_init_window] desktop window 0x389 is root window
+[2026-11-27 18:32:04.813] [debug] [src/output/x11.cc:751:x11_init_window] [init::x11_init_window] background alpha=0x0 wants_alpha=true
+[2026-11-27 18:32:04.813] [debug] [src/output/x11.cc:522:has_compositor] [init::x11_init_window] compositor detected
+[2026-11-27 18:32:04.813] [debug] [src/output/x11.cc:550:try_set_argb_visual] [init::x11_init_window] using ARGB visual (depth=32, id=0x85)
+[2026-11-27 18:32:04.813] [info ] [src/output/x11.cc:889:x11_init_window] window type - dock
+[2026-11-27 18:32:04.813] [debug] [src/output/x11.cc:947:x11_init_window] [init::x11_init_window] hint - above
+[2026-11-27 18:32:04.813] [debug] [src/output/x11.cc:969:x11_init_window] [init::x11_init_window] hint - sticky
+[2026-11-27 18:32:04.813] [debug] [src/output/x11.cc:991:x11_init_window] [init::x11_init_window] hint - skip taskbar
+[2026-11-27 18:32:04.813] [debug] [src/output/x11.cc:1004:x11_init_window] [init::x11_init_window] hint - skip pager
+[2026-11-27 18:32:04.813] [info ] [src/output/x11.cc:1018:x11_init_window] drawing to created window 0x1400002
+[2026-11-27 18:32:04.813] [debug] [src/mouse-events.cc:425:init_xi_device] [init::x11_init_window] xi scroll class: number=2 type=horizontal increment=1
+[2026-11-27 18:32:04.813] [debug] [src/mouse-events.cc:425:init_xi_device] [init::x11_init_window] xi scroll class: number=3 type=vertical increment=1
+[2026-11-27 18:32:04.813] [debug] [src/mouse-events.cc:478:init_xi_device] [init::x11_init_window] xi device 'Virtual core pointer' valuators: move_x=0 move_y=1 scroll_x=2 scroll_y=3 scroll_y_increment=1
+[2026-11-27 18:32:04.814] [debug] [src/mouse-events.cc:478:init_xi_device] [init::x11_init_window] xi device 'Virtual core XTEST pointer' valuators: move_x=0 move_y=1 scroll_x=18446744073709551615 scroll_y=18446744073709551615 scroll_y_increment=1
+[2026-11-27 18:32:04.814] [debug] [src/mouse-events.cc:425:init_xi_device] [init::x11_init_window] xi scroll class: number=2 type=horizontal increment=1
+[2026-11-27 18:32:04.814] [debug] [src/mouse-events.cc:425:init_xi_device] [init::x11_init_window] xi scroll class: number=3 type=vertical increment=1
+[2026-11-27 18:32:04.814] [debug] [src/mouse-events.cc:478:init_xi_device] [init::x11_init_window] xi device 'xwayland-pointer:11' valuators: move_x=0 move_y=1 scroll_x=2 scroll_y=3 scroll_y_increment=1
+[2026-11-27 18:32:04.814] [debug] [src/mouse-events.cc:425:init_xi_device] [init::x11_init_window] xi scroll class: number=2 type=horizontal increment=1
+[2026-11-27 18:32:04.814] [debug] [src/mouse-events.cc:425:init_xi_device] [init::x11_init_window] xi scroll class: number=3 type=vertical increment=1
+[2026-11-27 18:32:04.814] [debug] [src/mouse-events.cc:478:init_xi_device] [init::x11_init_window] xi device 'xwayland-relative-pointer:11' valuators: move_x=0 move_y=1 scroll_x=2 scroll_y=3 scroll_y_increment=1
+[2026-11-27 18:32:04.814] [debug] [src/mouse-events.cc:478:init_xi_device] [init::x11_init_window] xi device 'xwayland-pointer-gestures:11' valuators: move_x=0 move_y=1 scroll_x=18446744073709551615 scroll_y=18446744073709551615 scroll_y_increment=1
+[2026-11-27 18:32:04.814] [info ] [src/output/display-x11.cc:227:initialize] drawing to double buffer
+[2026-11-27 18:32:04.814] [debug] [src/lua/fonts.cc:89:load_fonts] [init] loading fonts
+[2026-11-27 18:32:04.819] [debug] [src/lua/fonts.cc:64:setup_fonts] [init] setting up fonts
+[2026-11-27 18:32:04.819] [debug] [src/output/x11.cc:479:set_transparent_background] [init] ARGB background: colour=(0,0,0,0) xcolor=0x00000000 opacity=0
+[2026-11-27 18:32:04.819] [debug] [src/lua/fonts.cc:64:setup_fonts] [init::draw] setting up fonts
+[2026-11-27 18:32:04.819] [debug] [src/lua/fonts.cc:64:setup_fonts] [init::draw] setting up fonts
+[2026-11-27 18:32:04.819] [debug] [src/output/display-output.cc:80:initialize_display_outputs] [init] initialized display output 'x11'
+DONE
+[2026-11-27 18:32:04.819] [debug] [src/lua/fonts.cc:64:setup_fonts] [main_loop::draw] setting up fonts
+[2026-11-27 18:32:04.819] [debug] [src/lua/fonts.cc:64:setup_fonts] [main_loop::draw] setting up fonts
+[2026-11-27 18:32:04.819] [debug] [src/lua/fonts.cc:89:load_fonts] [main_loop::update_text] loading fonts
+DONE
+[2026-11-27 18:32:04.819] [debug] [src/lua/fonts.cc:64:setup_fonts] [main_loop::draw] setting up fonts
+[2026-11-27 18:32:04.819] [debug] [src/lua/fonts.cc:64:setup_fonts] [main_loop::draw] setting up fonts
+[2026-11-27 18:32:04.819] [debug] [src/output/x11.cc:479:set_transparent_background] [main_loop] ARGB background: colour=(0,0,0,0) xcolor=0x00000000 opacity=0
+DONE
+[2026-11-27 18:32:04.819] [debug] [src/lua/fonts.cc:64:setup_fonts] [main_loop::draw] setting up fonts
+[2026-11-27 18:32:04.819] [debug] [src/lua/fonts.cc:64:setup_fonts] [main_loop::draw] setting up fonts
+DONE
+[2026-11-27 18:32:04.821] [debug] [src/lua/fonts.cc:64:setup_fonts] [main_loop::draw] setting up fonts
+[2026-11-27 18:32:04.821] [debug] [src/lua/fonts.cc:64:setup_fonts] [main_loop::draw] setting up fonts
+[2026-11-27 18:32:05.000] [debug] [src/lua/fonts.cc:89:load_fonts] [main_loop::update_text] loading fonts
+DONE
+[2026-11-27 18:32:05.000] [debug] [src/lua/fonts.cc:64:setup_fonts] [main_loop::draw] setting up fonts
+[2026-11-27 18:32:05.000] [debug] [src/lua/fonts.cc:64:setup_fonts] [main_loop::draw] setting up fonts
+[2026-11-27 18:32:06.001] [debug] [src/lua/fonts.cc:89:load_fonts] [main_loop::update_text] loading fonts
+DONE
+[2026-11-27 18:32:06.001] [debug] [src/lua/fonts.cc:64:setup_fonts] [main_loop::draw] setting up fonts
+[2026-11-27 18:32:06.001] [debug] [src/lua/fonts.cc:64:setup_fonts] [main_loop::draw] setting up fonts
+[2026-11-27 18:32:07.001] [debug] [src/lua/fonts.cc:89:load_fonts] [main_loop::update_text] loading fonts
+DONE
+[2026-11-27 18:32:07.001] [debug] [src/lua/fonts.cc:64:setup_fonts] [main_loop::draw] setting up fonts
+[2026-11-27 18:32:07.001] [debug] [src/lua/fonts.cc:64:setup_fonts] [main_loop::draw] setting up fonts
+[2026-11-27 18:32:08.001] [debug] [src/lua/fonts.cc:89:load_fonts] [main_loop::update_text] loading fonts
+DONE
+[2026-11-27 18:32:08.001] [debug] [src/lua/fonts.cc:64:setup_fonts] [main_loop::draw] setting up fonts
+[2026-11-27 18:32:08.001] [debug] [src/lua/fonts.cc:64:setup_fonts] [main_loop::draw] setting up fonts
+[2026-11-27 18:32:08.775] [info ] [src/conky.cc:1878:main_loop] received termination signal, shutting down

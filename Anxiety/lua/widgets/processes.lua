@@ -16,15 +16,15 @@ function Processes:Display(cr, y)
     _, y = Draw:RightText(cr, Locale.MEM, y, Config.MarginX + (5 * width))
 
     Draw:Font(cr, Config.Text.Info)
-    for i=1,10,1 do
+    for i = 1, 10, 1 do
         if y + GetFontHeight(cr) > conky_window.height then
             break
         end
 
         Draw:Text(cr, conky_parse("${top name " .. i .. " }"), Config.MarginX, y)
-        Draw:RightText(cr, trim(conky_parse("${top pid " .. i .. " }")), y, Config.MarginX + (3 * width))
-        Draw:RightText(cr, trim(conky_parse("${top cpu " .. i .. " }")) .. "%", y, Config.MarginX + (4 * width))
-        _, y = Draw:RightText(cr, trim(conky_parse("${top mem_res " .. i .. " }")), y, Config.MarginX + (5 * width))
+        Draw:RightText(cr, Trim(conky_parse("${top pid " .. i .. " }")), y, Config.MarginX + (3 * width))
+        Draw:RightText(cr, Trim(conky_parse("${top cpu " .. i .. " }")) .. "%", y, Config.MarginX + (4 * width))
+        _, y = Draw:RightText(cr, Trim(conky_parse("${top mem_res " .. i .. " }")), y, Config.MarginX + (5 * width))
     end
 
     return y

@@ -1,14 +1,14 @@
 CPU = { CPUName = "", GraphMain = nil, CPUCount = 1 }
 
 function CPU:new()
-    self.CPUName = pipe("grep model /proc/cpuinfo | cut -d : -f2 | tail -1 | sed 's/\\s//'")
-    self.CPUCount = tonumber(pipe("lscpu | grep '^CPU(s):' | awk '{print $2}'"))
+    self.CPUName = ReadCli("grep model /proc/cpuinfo | cut -d : -f2 | tail -1 | sed 's/\\s//'")
+    self.CPUCount = tonumber(ReadCli("lscpu | grep '^CPU(s):' | awk '{print $2}'") or nil)
 
     if Config.PieGraph.Graph.Color then
-        local configMainGraph = table_copy(Config.PieGraph)
+        local configMainGraph = TableCopy(Config.PieGraph)
         configMainGraph.Graph.Radius = 30
         self.GraphMain = PieGraph:new(configMainGraph, 90, 170)
-        self._configSmallGraph = table_copy(Config.PieGraph)
+        self._configSmallGraph = TableCopy(Config.PieGraph)
         self._configSmallGraph.Graph.BarWidthPercent = 75
         self._configSmallGraph.Graph.Label.FontSize = 12
         self._configSmallGraph.PaddingPercent = 20
@@ -23,10 +23,7 @@ end
 
 function CPU:Display(cr, y)
     y = Draw:Header(cr, Locale.CPU, y)
-    if Config.Text then
-        Draw:Font(cr, Config.Text.Special)
-    end
-
+    Draw:Font(cr, Config.Text.Special)
     _, y = Draw:LeftText(cr, self.CPUName, y)
 
     y = y + (Config.Padding * 2)
@@ -43,7 +40,7 @@ function CPU:Display(cr, y)
         local showCores = self._configSmallGraph and self.CPUCount > 1
         local cpuRows = showCores and math.ceil(self.CPUCount / graphsPerRow) or 0
         local coresHeight = math.max(0, cpuRows * (smallGraphHeight + spacingY) - spacingY)
-        local height = math.max(self.GraphMain.Height, coresHeight)
+        local height = math.max(self.GraphMain.Height, coresHeight) + spacingY
 
         Draw:FillRect(cr, Config.MarginX, y, conky_window.width - (2 * Config.MarginX), height, "#00000060")
 
@@ -85,7 +82,7 @@ function CPU:Temp()
     if Sensors and Sensors.Json then
         local temp = Sensors:FindNumber(nil, "k10temp-", "Tctl", "temp1_input")
         if temp then
-            return toInt(temp) .. "°C"
+            return ToNumber(temp) .. "°C"
         end
     end
     return ""

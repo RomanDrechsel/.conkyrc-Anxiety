@@ -10,30 +10,36 @@ package.path = pwd .. "?.lua;" .. package.path
 
 JSON = require("helpers.json")
 require("helpers.functions")
-local languageLoader = require("loader.language_loader")
-local themeLoader = require("loader.theme_loader")
 local root = pwd .. "../"
 
 require('config')
-Locale = languageLoader:load(root, Config.Language)
-print("[Anxiety] Using localization: '" .. Config.Language .. "'")
+Locale = require("loader.language_loader"):load(root, Config.Language)
+
+local ConfigLoader = require("loader.config_loader")
+local configLoader = ConfigLoader:new(pwd .. "buildIn/", pwd .. "../customizable/")
+configLoader.Debug = true
+Config = configLoader:load()
+
+local themeLoader = require("loader.theme_loader")
+
 Theme = themeLoader:load(root, Config.Theme)
-print("[Anxiety] Using theme: '" .. Config.Theme .. "'")
 themeLoader:apply(Config, Theme)
 
-require('safe_config')
-Config = safe_config(Config)
+Config = configLoader:finalize(Config)
+
+print("[Anxiety] Using localization: '" .. Config.Language .. "'")
+print("[Anxiety] Using theme: '" .. Config.Theme .. "'")
 
 require('cairo')
-CacheDir = home() .. ".cache/conky/Anxiety/"
+CacheDir = HomePath() .. ".cache/conky/Anxiety/"
 
 require('helpers.timer')
 require('helpers.draw')
-require('graphs.graph_helpers')
+require("helpers.sensors")
+require('graphs.graph_style')
 require('graphs.linegraph')
 require('graphs.piegraph')
 require('graphs.bargraph')
-require("helpers.sensors")
 require('widgets.clock')
 require('widgets.system')
 require("widgets.gpu_nvidia")
@@ -42,9 +48,7 @@ require("widgets.harddisk")
 require("widgets.ram")
 require("widgets.network")
 require("widgets.processes")
-
 local background = nil
-
 
 function conky_pre()
     if conky_window == nil or conky_window.width <= 0 or conky_window.height <= 0 then
@@ -55,10 +59,10 @@ function conky_pre()
         Sensors:Update()
     end
 
-    if NVIDIA_GPU then
-        NVIDIA_GPU:Update()
-    elseif AMD_GPU then
-        AMD_GPU:Update()
+    if GPU_Nvidia then
+        GPU_Nvidia:Update()
+    elseif GPU_AMD then
+        GPU_AMD:Update()
     end
 
     if Disk then
@@ -104,10 +108,10 @@ function conky_pre()
         end
 
         if y < conky_window.height then
-            if NVIDIA_GPU then
-                y = NVIDIA_GPU:Display(cr, y) or 0
-            elseif AMD_GPU then
-                y = AMD_GPU:Display(cr, y) or 0
+            if GPU_Nvidia then
+                y = GPU_Nvidia:Display(cr, y) or 0
+            elseif GPU_AMD then
+                y = GPU_AMD:Display(cr, y) or 0
             end
         end
         if Disk and y < conky_window.height then

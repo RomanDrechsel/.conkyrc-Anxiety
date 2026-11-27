@@ -7,12 +7,12 @@ function Draw:Background(cr, image)
     if not cr or not image then
         return
     end
-    local w, h = cairo_image_surface_get_width(image), cairo_image_surface_get_height(image)
-    if w <= 0 or h <= 0 then
+    local width, height = cairo_image_surface_get_width(image), cairo_image_surface_get_height(image)
+    if width <= 0 or height <= 0 then
         return
     end
     cairo_save(cr)
-    cairo_scale(cr, conky_window.width / w, conky_window.height / h)
+    cairo_scale(cr, conky_window.width / width, conky_window.height / height)
     cairo_set_source_surface(cr, image, 0, 0)
     cairo_paint(cr)
     cairo_restore(cr)
@@ -66,7 +66,6 @@ function Draw:PointText(cr, text, cx, cy)
     local y = cy - GetFontHeight(cr) / 2
     return self:Text(cr, text, x, y)
 end
-
 
 function Draw:Row(cr, y, text_left, font_left, text_center, font_center, text_right, font_right)
     local bottom = y
@@ -238,13 +237,13 @@ function Draw:FillPolygon(cr, points, color)
     cairo_fill(cr)
 end
 
-function Draw:Circle(cr, cx, cy, r, color, linewidth)
-    if linewidth == nil or linewidth <= 0 or r == nil or r <= 0 then
+function Draw:Circle(cr, cx, cy, radius, color, linewidth)
+    if linewidth == nil or linewidth <= 0 or radius == nil or radius <= 0 then
         return
     end
 
     self:Color(cr, color)
-    cairo_arc(cr, cx, cy, r, 0, 2 * math.pi)
+    cairo_arc(cr, cx, cy, radius, 0, 2 * math.pi)
     cairo_set_line_width(cr, linewidth)
     cairo_stroke(cr)
 end
@@ -290,7 +289,7 @@ function HexToRGBA(hex)
     local b = tonumber(hexWithoutAlpha:sub(5, 6), 16) / 255
 
     local a = 1
-    if isEmpty(alphaHex) == false then
+    if IsEmpty(alphaHex) == false then
         a = tonumber(alphaHex, 16) / 255
     end
 

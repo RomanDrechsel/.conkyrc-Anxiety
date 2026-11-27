@@ -1,14 +1,1 @@
-root = true
-
-[*]
-charset = utf-8
-end_of_line = lf
-indent_style = space
-indent_size = 4
-trim_trailing_whitespace = true
-insert_final_newline = true
-max_line_length = unset
-auto_collapse_lines = false
-
-[*.{json,yml,yaml}]
-indent_size = 2
+/home/roman/Jump/Nextcloud/roman-drechsel.de/Coding/Config/.editorconfig

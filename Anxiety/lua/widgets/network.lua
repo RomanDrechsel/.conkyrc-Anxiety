@@ -1,10 +1,10 @@
-NET = { CurrentIP = "-", CurrentPing = -1, _lastInet = nil}
+NET = { CurrentIP = Locale.NA, CurrentPing = -1, _lastInet = nil }
 
 function NET:new()
-    --self._getIP()
-    --self._getPing()
     self._timerIP = Timer:new(60)
     self._timerPing = Timer:new(5)
+    self:_getIP()
+    self:_getPing()
 
     self._json = nil
     if Config.NetworkGraph then
@@ -30,7 +30,7 @@ function NET:Display(cr, y)
         local up = self._json["speed_up"]
         local speed = self:Speed()
         local total = self:Total()
-        if (speed and speed ~= "") or (total and total ~= "") then
+        if not IsEmpty(speed) or not IsEmpty(total) then
             y = Draw:Row(cr, y, speed, Config.Text.Info, nil, nil, total, nil)
         end
 
@@ -65,14 +65,14 @@ function NET:Speed()
         if up or down then
             local ret = ""
             if down then
-                ret = format_bytes(down)
+                ret = FormatBytes(down)
             else
                 ret = "-"
             end
 
             ret = ret .. " / ";
             if up then
-                ret = ret .. format_bytes(up)
+                ret = ret .. FormatBytes(up)
             else
                 ret = ret .. "-"
             end
@@ -92,14 +92,14 @@ function NET:Total()
         if up or down then
             local ret = ""
             if down then
-                ret = format_bytes(down)
+                ret = FormatBytes(down)
             else
                 ret = "-"
             end
 
             ret = ret .. " / ";
             if up then
-                ret = ret .. format_bytes(up)
+                ret = ret .. FormatBytes(up)
             else
                 ret = ret .. "-"
             end
@@ -112,14 +112,13 @@ function NET:Total()
 end
 
 function NET:Ping()
-    if self.CurrentPing and self.CurrentPing > 0 then
-        return self.CurrentPing .. " ms"
+    if self.CurrentPing and self.CurrentPing >= 0 then
+        return string.format("%.1f ms", self.CurrentPing)
     end
 
     local ret = Locale.NoNetwork
-
     if not self._lastInet then
-        self._lastInet = tonumber(read_cache("inet"))
+        self._lastInet = tonumber(ReadFromCacheFile("inet"))
     end
 
     if self._lastInet then
@@ -129,32 +128,34 @@ function NET:Ping()
         local minutes = math.floor(diff / 60) % 60
         local hours = math.floor(diff / 3600)
 
-        ret = ret .. " "
-            .. (hours > 0 and hours .. "h " or "")
-            .. (minutes > 0 and minutes .. "m " or "")
-            .. seconds .. "s"
+        ret = ret .. " " .. (hours > 0 and hours .. "h " or "") .. (minutes > 0 and minutes .. "m " or "") .. seconds .. "s"
     end
 
     return ret
 end
 
 function NET:_getIP()
-    local ip = pipe("curl -s https://ipinfo.io/ip")
+    local ip = ReadCli("curl -s https://ipinfo.io/ip")
     if ip then
         self.CurrentIP = ip
     else
-        self.CurrentIP = "-"
+        self.CurrentIP = Locale.NA
     end
 end
 
 function NET:_getPing()
-    local ping = pipe("ping -c 1 -q -i 0.2 -w 1 google.com | awk -F'/' 'END{print int($6)}'")
-    if ping then
-        self.CurrentPing = tonumber(ping)
+    local ping = tonumber(ReadCli(
+        "LC_ALL=C ping -c 1 -q -w 1 google.com"
+        .. " 2>/dev/null | awk -F'/' '/^rtt/ {print $5}'"
+    ))
+
+    if ping and ping >= 0 then
+        self.CurrentPing = ping
         self._lastInet = os.time()
-        write_cache("inet", self._lastInet)
+
+        WriteToCacheFile("inet", self._lastInet)
     else
-        self.CurrentPing = 0
+        self.CurrentPing = -1
     end
 end
 
@@ -231,14 +232,14 @@ function NET:_getTraffic()
     end
 
     received = math.floor(received + 0.5)
-    transmitted =  math.floor(transmitted + 0.5)
+    transmitted = math.floor(transmitted + 0.5)
 
     -- Store counters for the next update
     self._lastTraffic = {
         interface = interface,
         timestamp = now,
         received = received,
-        transmitted =  transmitted
+        transmitted = transmitted
     }
 
     -- Preserve the existing data structure

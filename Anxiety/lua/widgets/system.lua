@@ -1,35 +1,32 @@
-System = {}
-
-local uptime
-local processes
+System = { System = nil, Host = nil, Kernel = nil, User = nil, Processes = nil, Uptime = nil }
 
 function System:new()
-    local sys = pipe("hostnamectl | grep \"Operating System:\"")
+    local sys = ReadCli("hostnamectl | grep \"Operating System:\"")
     if sys then
         self.System = sys:match("Operating System:%s+(.-)%s+%(")
     end
 
-    if isEmpty(self.System) then
-        self.System = pipe("cat /etc/os-release | grep PRETTY_NAME | awk -F'\"' '{gsub(/\\(.*)/, \"\", $2); gsub(/\\(.*)/, \"\", $2); print $2}'")
+    if IsEmpty(self.System) then
+        self.System = ReadCli("cat /etc/os-release | grep PRETTY_NAME | awk -F'\"' '{gsub(/\\(.*)/, \"\", $2); gsub(/\\(.*)/, \"\", $2); print $2}'")
     end
 
-    local version = pipe("cat /etc/lsb-release | grep DISTRIB_RELEASE | awk -F'\"' '{gsub(/\\(.*)/, \"\", $2); gsub(/\\(.*)/, \"\", $2); print $2}'")
+    local version = ReadCli("cat /etc/lsb-release | grep DISTRIB_RELEASE | awk -F'\"' '{gsub(/\\(.*)/, \"\", $2); gsub(/\\(.*)/, \"\", $2); print $2}'")
     if version then
         self.System = self.System .. " " .. version
     end
 
-    local uname = pipe("uname -a")
+    local uname = ReadCli("uname -a")
     if uname then
         local _, host, kernel = uname:match("(%S+)%s+(%S+)%s+(%S+)")
         if host then
-            self.Host = trim(host)
+            self.Host = Trim(host)
         end
         if kernel then
-            self.Kernel = trim(kernel)
+            self.Kernel = Trim(kernel)
         end
     end
 
-    self.User = pipe("whoami")
+    self.User = ReadCli("whoami")
 
     return self
 end
@@ -44,36 +41,34 @@ function System:Display(cr, y)
     y = Draw:Row(cr, y, Locale.Host, Config.Text.Label, nil, nil, self.Host .. " / " .. self.User, Config.Text.Info)
 
     -- Uptime
-    y = Draw:Row(cr, y, Locale.Uptime, Config.Text.Label, nil, nil, uptime(), Config.Text.Info)
+    y = Draw:Row(cr, y, Locale.Uptime, Config.Text.Label, nil, nil, self:_uptime(), Config.Text.Info)
 
     -- processes
-    y = Draw:Row(cr, y, Locale.Processes, Config.Text.Label, nil, nil, processes(), Config.Text.Info)
+    y = Draw:Row(cr, y, Locale.Processes, Config.Text.Label, nil, nil, self:_processes(), Config.Text.Info)
 
     return y
 end
 
-System:new()
-
-function uptime()
-    local uptimeCommandOutput = pipe("uptime -s")
+function System:_uptime()
+    local uptimeCommandOutput = ReadCli("uptime -s")
     if uptimeCommandOutput then
         local year, month, day, hour, min, sec = uptimeCommandOutput:match("(%d+)%-(%d+)%-(%d+)%s+(%d+):(%d+):(%d+)")
 
-        local startTimestamp = os.time{year=year,
-                                        month=month,
-                                        day=day,
-                                        hour=hour,
-                                        min=min,
-                                        sec=sec}
+        local startTimestamp = os.time {
+            year = year,
+            month = month,
+            day = day,
+            hour = hour,
+            min = min,
+            sec = sec }
 
         local uptimeSeconds = os.time() - startTimestamp
-
         local days = math.floor(uptimeSeconds / 3600 / 24)
         local hours = math.floor(uptimeSeconds / 3600) % 24
         local minutes = math.floor((uptimeSeconds % 3600) / 60)
         local seconds = uptimeSeconds % 60
 
-        local ret = seconds .."s"
+        local ret = seconds .. "s"
         if uptimeSeconds >= 60 then
             ret = minutes .. "m " .. ret
         end
@@ -86,12 +81,12 @@ function uptime()
 
         return ret
     end
-    return ""
+    return Locale.NA
 end
 
-function processes()
-    local pse = pipe("ps -e | wc -l")
-    local psu = pipe("ps -U \"" .. System.User .. "\" | wc -l")
+function System:_processes()
+    local pse = ReadCli("ps -e | wc -l")
+    local psu = ReadCli("ps -U \"" .. System.User .. "\" | wc -l")
 
     if pse then
         if pse == psu or psu == nil then
@@ -101,5 +96,7 @@ function processes()
         end
     end
 
-    return ""
+    return Locale.NA
 end
+
+System:new()

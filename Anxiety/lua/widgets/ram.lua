@@ -8,7 +8,7 @@ function RAM:new()
 end
 
 function RAM:Update()
-    local pipe = pipe("LANG=C && free -b")
+    local pipe = ReadCli("LANG=C && free -b")
     if pipe then
         local mem_total, mem_used, _, _, _, _ = pipe:match("Mem:%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)")
         local swap_total, swap_used, _ = pipe:match("Swap:%s+(%d+)%s+(%d+)%s+(%d+)")
@@ -35,12 +35,12 @@ function RAM:Display(cr, y)
     end
 
     local usage = self:Usage()
-    if usage and usage ~= "-" then
+    if usage then
         y = Draw:Row(cr, y, Locale.RAM, Config.Text.Label, usage, Config.Text.Info, self:Percentage(), nil)
     end
 
     local swap = self:UsageSwap()
-    if swap and swap ~= "-" then
+    if swap then
         y = Draw:Row(cr, y, Locale.Swap, Config.Text.Label, swap, Config.Text.Info, self:PercentageSwap(), nil)
     end
 
@@ -51,10 +51,10 @@ function RAM:Usage()
     local used = nil
     local size = nil
     if self.MemUsed > 0 then
-        used = format_bytes(self.MemUsed)
+        used = FormatBytes(self.MemUsed)
     end
     if used and self.MemTotal > 0 then
-        size = format_bytes(self.MemTotal)
+        size = FormatBytes(self.MemTotal)
     end
 
     if used and size then
@@ -64,7 +64,7 @@ function RAM:Usage()
     elseif size then
         return size
     end
-    return "-"
+    return nil
 end
 
 function RAM:Percentage()
@@ -78,10 +78,10 @@ function RAM:UsageSwap()
     local used = nil
     local size = nil
     if self.SwapTotal > 0 then
-        size = format_bytes(self.SwapTotal)
+        size = FormatBytes(self.SwapTotal)
     end
     if size and self.SwapUsed > 0 then
-        used = format_bytes(self.SwapUsed)
+        used = FormatBytes(self.SwapUsed)
     end
 
     if used and size then
@@ -91,7 +91,7 @@ function RAM:UsageSwap()
     elseif size then
         return size
     end
-    return "-"
+    return nil
 end
 
 function RAM:PercentageSwap()

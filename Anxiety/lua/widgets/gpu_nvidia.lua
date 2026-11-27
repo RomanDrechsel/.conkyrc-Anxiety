@@ -1,6 +1,6 @@
-NVIDIA_GPU = {}
+GPU_Nvidia = {}
 
-function NVIDIA_GPU:new()
+function GPU_Nvidia:new()
     if Config.LineGraph.Graph.LineColor and Config.LineGraph.Graph.LineWidth and Config.LineGraph.Graph.LineWidth > 0 then
         self.GraphLine = LineGraph:new(Config.LineGraph, nil, 60)
     end
@@ -8,13 +8,11 @@ function NVIDIA_GPU:new()
     return self
 end
 
-function NVIDIA_GPU:Display(cr, y)
+function GPU_Nvidia:Display(cr, y)
     y = Draw:Header(cr, Locale.VideoCard, y)
 
-    local y2 = y
-
-    local values = pipe(
-        "nvidia-smi --query-gpu=driver_version,name,temperature.gpu,utilization.gpu,memory.used,memory.total,fan.speed,power.draw,power.limit --format=csv,noheader,nounits")
+    local yStart = y
+    local values = ReadCli("nvidia-smi --query-gpu=driver_version,name,temperature.gpu,utilization.gpu,memory.used,memory.total,fan.speed,power.draw,power.limit --format=csv,noheader,nounits")
     local fields = {}
 
     if values then
@@ -24,16 +22,13 @@ function NVIDIA_GPU:Display(cr, y)
     end
 
     -- card name
-    if Config.Text then
-        Draw:Font(cr, Config.Text.Special)
-    end
-
+    Draw:Font(cr, Config.Text.Special)
     _, y = Draw:LeftText(cr, fields[2] or "N/A", y)
     y = y + 5
 
     -- driver version
     Draw:Font(cr, Config.Text.Info)
-    Draw:RightText(cr, fields[1] or "N/A", y2)
+    Draw:RightText(cr, fields[1] or "N/A", yStart)
 
     -- graph
     if self.GraphLine then
@@ -41,8 +36,7 @@ function NVIDIA_GPU:Display(cr, y)
     end
 
     -- Utilization / Temperature
-    y = Draw:Row(cr, y, Locale.GPU, Config.Text.Label, tonumber(fields[3]) .. "°C", Config.Text.Info,
-        tonumber(fields[4]) .. "%", nil);
+    y = Draw:Row(cr, y, Locale.GPU, Config.Text.Label, tonumber(fields[3]) .. "°C", Config.Text.Info, tonumber(fields[4]) .. "%", nil);
 
     -- Memory
     y = Draw:Row(cr, y, Locale.Memory, Config.Text.Label, self:MemTemp(), Config.Text.Info, self:VRAM(fields), nil);
@@ -56,43 +50,41 @@ function NVIDIA_GPU:Display(cr, y)
     return y
 end
 
-function NVIDIA_GPU:Update()
+function GPU_Nvidia:Update()
 end
 
-function NVIDIA_GPU:MemTemp()
-    local temp_output = pipe("nvidia-smi -q -d TEMPERATURE")
-    if (temp_output == nil) then
-        return ""
+function GPU_Nvidia:MemTemp()
+    local temp_output = ReadCli("nvidia-smi -q -d TEMPERATURE")
+
+    if temp_output then
+        local mem_temp = temp_output:match("Memory Temperature%s*:%s*(%d+)%s*C")
+        if mem_temp then
+            return mem_temp
+        end
     end
 
-    local mem_temp = temp_output:match("Memory Temperature%s*:%s*(%d+)%s*C")
-
-    if mem_temp then
-        return mem_temp
-    else
-        return ""
-    end
+    return ""
 end
 
-function NVIDIA_GPU:VRAM(fields)
+function GPU_Nvidia:VRAM(fields)
     return tonumber(fields[5]) .. " MB / " .. tonumber(fields[6]) .. " MB"
 end
 
-function NVIDIA_GPU:Power(fields)
+function GPU_Nvidia:Power(fields)
     local curr = tonumber(fields[8])
     local max = tonumber(fields[9])
 
     if curr then
-        curr = toInt(curr)
-        local percent = toInt(curr / max * 100)
+        curr = ToNumber(curr)
+        local percent = ToNumber(curr / max * 100)
         local percent_str = "";
         if percent then
             percent = math.floor(percent + 0.5)
-            percent_str = " (" .. toInt(curr / max * 100) .. "%)"
+            percent_str = " (" .. percent .. "%)"
         end
 
         return curr .. " W" .. percent_str
     end
 end
 
-NVIDIA_GPU:new()
+GPU_Nvidia:new()

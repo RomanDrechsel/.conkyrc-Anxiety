@@ -32,4 +32,6 @@ Locale.Name = "Name"
 Locale.PID = "PID"
 Locale.MEM = "MEM"
 
+Locale.NA = "N/A"
+
 return Locale;

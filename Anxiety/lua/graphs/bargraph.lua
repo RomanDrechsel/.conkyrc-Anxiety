@@ -1,34 +1,47 @@
-BarGraph={}
-BarGraph.__index=BarGraph
-function BarGraph:new(config,height)
-    local o=setmetatable({},self)
-    o:setConfig(config or Config.BarGraph)
-    o.Height=height or o.Config.DefaultHeight
-    return o
+BarGraph = {}
+BarGraph.__index = BarGraph
+function BarGraph:new(config, height)
+    local graph = setmetatable({}, self)
+    graph:setConfig(config or Config.BarGraph)
+    graph.Height = height or graph.Config.DefaultHeight
+    return graph
 end
+
 function BarGraph:setConfig(config)
-    self.Config=table_copy(config or {})
+    self.Config = TableCopy(config or {})
 end
-function BarGraph:Draw(cr,x,y,data)
-    local S=GraphStyle
-    local c=self.Config
-    local g=c.Graph or {}
-    local w=conky_window.width-x-Config.MarginX
-    local h=S.number(self.Height,0)
-    if w<=0 or h<=0 then return end
-    local scale=S.number(g.Scale,100)
-    if scale<=0 then scale=100 end
-    local fill=w*S.clamp(S.number(data,0)/scale,0,1)
+
+function BarGraph:Draw(cr, x, y, data)
+    local graph = self.Config.Graph or {}
+    local width = conky_window.width - x - Config.MarginX
+    local height = GraphStyle.number(self.Height, 0)
+    if width <= 0 or height <= 0 then
+        return
+    end
+
+    local scale = GraphStyle.number(graph.Scale, 100)
+    if scale <= 0 then
+        scale = 100
+    end
+
+    local fill = width * GraphStyle.clamp(GraphStyle.number(data, 0) / scale, 0, 1)
     cairo_save(cr)
-    S.frame(cr,x,y,w,h,c)
-    if fill>0 and g.Color then
-        S.rounded(cr,x,y,fill,h,S.number(c.Radius,5))
-        if g.EndColor then S.gradient(cr,x,y,x+fill,y,g.Color,g.EndColor)
-        else Draw:Color(cr,g.Color) end
+
+    GraphStyle.frame(cr, x, y, width, height, self.Config)
+
+    if fill > 0 and graph.Color then
+        GraphStyle.rounded(cr, x, y, fill, height, GraphStyle.number(self.Config.Radius, 5))
+        if graph.EndColor then
+            GraphStyle.gradient(cr, x, y, x + fill, y, graph.Color, graph.EndColor)
+        else
+            Draw:Color(cr, graph.Color)
+        end
         cairo_fill(cr)
     end
-    S.grid(cr,x,y,w,h,c)
+
+    GraphStyle.grid(cr, x, y, width, height, self.Config)
     cairo_restore(cr)
-    cairo_save(cr); S.border(cr,x,y,w,h,c); cairo_restore(cr)
-    return y+h
+    cairo_save(cr); GraphStyle.border(cr, x, y, width, height, self.Config); cairo_restore(cr)
+
+    return y + height
 end

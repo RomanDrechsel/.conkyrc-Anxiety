@@ -15,7 +15,6 @@ local dataFont = "DejaVu Sans Mono"
 
 Theme = {
     Colors = colors,
-    --BackgroundImage = "background.png",
     BackgroundImage = nil,
     MarginX = 10,
     MarginY = 10,

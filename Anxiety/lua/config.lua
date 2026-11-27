@@ -5,8 +5,17 @@ Config.Language = "de"
 Config.Theme = "theme_nebula"
 
 -- Videocard name
--- nil meens Determine automatically
+-- nil meens determine automatically
 Config.VideoCard = nil
+
+--[[
+    Display a special AMDGPU
+    can be found with
+        "lspci -D | grep -Ei 'VGA|3D|Display"
+    eg. "0000:03:00.0"
+]]
+Config.AMDGPUAddress = nil
+
 
 -- Partitions to be displayed
 Config.Partitions = {

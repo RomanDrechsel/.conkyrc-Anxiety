@@ -5,13 +5,13 @@ conky_cmd="conky -D -c .conkyrc"
 killcmd=false
 killopt=true
 
-for var in "$@" 
+for var in "$@"
 do
     if [ "$var" = "-l" ]; then
         conky_cmd="conky"
-    elif [ "$var" = "-k" ]; then
+        elif [ "$var" = "-k" ]; then
         killcmd=true
-    elif [ "$var" = "-d" ]; then
+        elif [ "$var" = "-d" ]; then
         killopt=false
     fi
 done
@@ -34,21 +34,21 @@ if [ -n "$pid" ]; then
 fi
 
 if [ $killopt = true ]; then
-    output_file="tmp" 
+    output_file="tmp"
     $conky_cmd &> "$output_file" &
-
+    
     sleep 1
     file_size_before=$(wc -c < "$output_file")
-    sleep 1
+    sleep 3
     file_size_after=$(wc -c < "$output_file")
-
+    
     pid=$(pgrep -o -f "$conky_cmd")
-
+    
     if [ "$file_size_after" -gt "$file_size_before" ]; then
         echo "Conky ($pid) was terminated :("
         echo " "
         echo "----"
-        tail -n 5 "$output_file"
+        tail -n 10 "$output_file"
         echo "----"
         echo " "
         kill "$pid"

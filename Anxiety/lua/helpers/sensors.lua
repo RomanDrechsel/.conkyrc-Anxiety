@@ -1,24 +1,25 @@
 Sensors = {}
 
 function Sensors:new()
-    if package_installed("sensors") == false then
+    local sensors = setmetatable({}, self)
+    if IsPackageInstalled("sensors") == false then
         print("Package \"sensors\" not installed!")
         print("run \"sudo pacman -Sq lm_sensors\"")
     else
-        self.Init = true
+        sensors.Init = true
     end
 
-    return self
+    return sensors
 end
 
 function Sensors:Update()
-    local sensors = pipe("sensors -j")
-    if isEmpty(sensors) then
+    local sensors = ReadCli("sensors -j")
+    if IsEmpty(sensors) then
         self.Json = nil
     else
-        local success, _json = pcall(JSON.parse, sensors)
-        if success and _json and _json ~= JSON.null then
-            self.Json = _json
+        local success, json = pcall(JSON.parse, sensors)
+        if success and json and json ~= JSON.null then
+            self.Json = json
         else
             self.Json = nil
         end
@@ -26,23 +27,21 @@ function Sensors:Update()
 end
 
 function Sensors:Get(...)
-    local value = self.Json
-
     for i = 1, select("#", ...) do
         local key = select(i, ...)
 
-        if type(value) ~= "table" or key == nil then
+        if type(self.Json) ~= "table" or key == nil then
             return nil
         end
 
-        value = value[key]
+        self.Json = self.Json[key]
 
-        if value == nil then
+        if self.Json == nil then
             return nil
         end
     end
 
-    return value
+    return self.Json
 end
 
 function Sensors:GetNumber(default, ...)
@@ -50,13 +49,16 @@ function Sensors:GetNumber(default, ...)
 end
 
 function Sensors:Find(chipPrefix, ...)
-    if type(self.Json) ~= "table" then
+    local json = self.Json
+
+    if type(json) ~= "table" then
         return nil
     end
 
-    for chipName in pairs(self.Json) do
+    for chipName in pairs(json) do
         if type(chipName) == "string" and chipName:sub(1, #chipPrefix) == chipPrefix then
             local value = self:Get(chipName, ...)
+
             if value ~= nil then
                 return value
             end

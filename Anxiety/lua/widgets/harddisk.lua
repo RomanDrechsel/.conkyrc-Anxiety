@@ -1,5 +1,9 @@
 Disk = { Sensors = nil, Used = -1, Size = -1, Percent = "" }
 
+function Disk:new()
+    return self
+end
+
 function Disk:Display(cr, y)
     y = Draw:Header(cr, Locale.Disk, y)
 
@@ -22,7 +26,7 @@ function Disk:Display(cr, y)
                     self.Graphs[i]:Draw(cr, bar_x, y + 6, self._df[part]["percent"])
 
                     Draw:Font(cr, Config.Text.Label)
-                    y = select(2, Draw:LeftText(cr, part, y))
+                    y = select(2, Draw:LeftText(cr, part, y)) + Config.Padding
                     y = Draw:Row(cr, y, usage, Config.Text.Info, nil, nil, self._df[part]["percent"] .. "%", nil)
                     i = i + 1
                 end
@@ -35,9 +39,9 @@ end
 
 function Disk:Temp()
     if Sensors and Sensors.Json then
-        local curr = Sensors.findNumber(nil, "nvme-pci-", "Composite", "temp1_input");
+        local curr = Sensors.FindNumber(nil, "nvme-pci-", "Composite", "temp1_input");
         if curr then
-            return toInt(curr) .. "°C"
+            return ToNumber(curr) .. "°C"
         end
     end
     return "";
@@ -53,9 +57,9 @@ function Disk:Usage(used, size)
 
     if used > 0 then
         if size > 0 then
-            return format_bytes(used) .. " / " .. format_bytes(size)
+            return FormatBytes(used) .. " / " .. FormatBytes(size)
         else
-            return format_bytes(used)
+            return FormatBytes(used)
         end
     end
 
@@ -69,16 +73,18 @@ function Disk:Update()
         end
 
         self._df = {}
-        local disk = pipe("df -P --sync")
+        local disk = ReadCli("df -P --sync")
         if disk then
-            local lines = split(disk)
+            local lines = Split(disk)
             for _, line in ipairs(lines) do
                 local _, size, used, _, _, mount = line:match("(%S+)%s+(%S+)%s+(%S+)%s+(%S+)%s+(%S+)%s+(%S+)")
-                if in_array(Config.Partitions, mount) then
+                if InArray(Config.Partitions, mount) then
                     local percent = tonumber(string.format("%.2f", used / size * 100))
-                    self._df[mount] = { size = toInt(size) * 1024, used = toInt(used) * 1024, percent = percent }
+                    self._df[mount] = { size = ToNumber(size) * 1024, used = ToNumber(used) * 1024, percent = percent }
                 end
             end
         end
     end
 end
+
+Disk:new()

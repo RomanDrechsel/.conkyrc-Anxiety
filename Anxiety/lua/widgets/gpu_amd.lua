@@ -1,239 +1,270 @@
-AMD_GPU = { Path = nil, DriverVersion = "", CardName = "" }
+GPU_AMD = { Path = nil, HwmonPath = nil, DriverVersion = nil, CardName = nil }
 
-function AMD_GPU:new()
-    self.Path = "/sys/class/drm/"
-    local card = pipe("ls " .. self.Path .. " | grep -E '^card[0-9]+$' | tail -n 1")
-    if card == nil or string.len(card) == 0 then
-        card = "card0"
-    end
+function GPU_AMD:new()
+    self.Path, self.PCIAddress = self:_findDevice()
+    self.HwmonPath = nil
+    self.DriverVersion = nil
+    self.CardName = nil
+    self.GraphLine = nil
+    self.Data = {}
+    self._timerEveryMin = Timer:new(60)
 
-    self.Path = self.Path .. card .. "/device/"
-
-    if dir_exists(self.Path) then
+    if self.Path then
         print("AMD-GPU Device found: " .. self.Path)
+        local graph = Config.LineGraph and Config.LineGraph.Graph
+        if graph and graph.LineColor and (tonumber(graph.LineWidth) or 0) > 0 then
+            self.GraphLine = LineGraph:new(Config.LineGraph, nil, 60)
+        end
+        self:_runOncePerMin()
+        self:_readMeasurements()
     else
-        AMD_GPU.Path = nil
         print("No AMD-GPU Device found!")
     end
-
-    self.DriverVersion = nil
-    if Config.VideoCard then
-        self.CardName = Config.VideoCard
-    else
-        local card = pipe("glxinfo -B | grep -A 10 \"Extended renderer info\" | grep -E \"Device:\"")
-        if card then
-            local gpuName = card:match("Device:%s+(.-)%s*%(.+%s*%)")
-            if gpuName then
-                self.CardName = gpuName
-            end
-        end
-    end
-
-    if Config.LineGraph.Graph.LineColor and Config.LineGraph.Graph.LineWidth and Config.LineGraph.Graph.LineWidth > 0 then
-        self.GraphLine = LineGraph:new(Config.LineGraph, nil, 60)
-    end
-
-    self._runOncePerMin(self)
-
     return self
 end
 
-function AMD_GPU:Display(cr, y)
+function GPU_AMD:_runOncePerMin()
+    if not self.Path then
+        return
+    end
+
+    self.HwmonPath = self:_findHwmon()
+
+    -- Identify the selected PCI device, not the active OpenGL renderer.
+    local name = Config.VideoCard
+    if type(name) ~= "string" or name == "" then
+        name = nil
+        if self.PCIAddress and self.PCIAddress:match("^%x+:%x+:%x+%.%x+$") then
+            local result = ReadCli("LC_ALL=C lspci -D -s " .. self.PCIAddress .. " 2>/dev/null")
+            if result then
+                name = result:match("^%S+%s+[^:]+:%s*(.-)%s*$")
+            end
+        end
+    end
+    self.CardName = name or "AMD GPU"
+
+    -- The in-kernel AMDGPU driver follows the kernel release, not Mesa's version.
+    local version = self:_readFile("/sys/module/amdgpu/version")
+    self.DriverVersion = version or self:_readFile("/proc/sys/kernel/osrelease")
+end
+
+function GPU_AMD:_readMeasurements()
+    local data = {}
+    if not self.Path then
+        self.Data = data; return
+    end
+    data.Utilization = self:_readNumber(self.Path .. "gpu_busy_percent")
+    data.VRAMUsed = self:_readNumber(self.Path .. "mem_info_vram_used")
+    data.VRAMTotal = self:_readNumber(self.Path .. "mem_info_vram_total")
+    data.Edge = self:_readHwmon("temp1_input")
+    data.Junction = self:_readHwmon("temp2_input")
+    data.MemoryTemperature = self:_readHwmon("temp3_input")
+    data.Fan = self:_readHwmon("fan1_input")
+    data.FanMaximum = self:_readHwmon("fan1_max")
+    data.Power = self:_readHwmon("power1_average") or self:_readHwmon("power1_input")
+    data.PowerLimit = self:_readHwmon("power1_cap")
+    local frequency = self:_readHwmon("freq1_input")
+    if frequency then
+        data.Clock = frequency / 1000000
+    end
+
+    -- DPM states provide the highest currently exposed clock, not a guaranteed boost limit.
+    local states = self:_readFile(self.Path .. "pp_dpm_sclk") or ""
+    for line in states:gmatch("[^\r\n]+") do
+        local mhz = tonumber(line:match(":%s*(%d+%.?%d*)%s*[Mm][Hh][Zz]"))
+        if mhz then
+            data.ClockMaximum = math.max(data.ClockMaximum or 0, mhz)
+            if not frequency and line:find("*", 1, true) then
+                data.Clock = mhz
+            end
+        end
+    end
+    self.Data = data
+end
+
+function GPU_AMD:Update()
+    if self._timerEveryMin:Ready() then
+        local path, address = self:_findDevice()
+        if path ~= self.Path or address ~= self.PCIAddress then
+            self.Path, self.PCIAddress = path, address
+            self.GraphLine = nil
+            local graph = Config.LineGraph and Config.LineGraph.Graph
+            if path and graph and graph.LineColor and (tonumber(graph.LineWidth) or 0) > 0 then
+                self.GraphLine = LineGraph:new(Config.LineGraph, nil, 60)
+            end
+        end
+        self:_runOncePerMin()
+    end
+    self:_readMeasurements()
+end
+
+function GPU_AMD:VRAM()
+    local used, maximum = self.Data.VRAMUsed, self.Data.VRAMTotal
+    if used == nil and maximum == nil then
+        return Locale.NA
+    end
+    return (used ~= nil and FormatBytes(used) or Locale.NA) .. " / " .. (maximum ~= nil and FormatBytes(maximum) or Locale.NA)
+end
+
+function GPU_AMD:Temp()
+    local parts = {}
+    if self.Data.Edge ~= nil then
+        parts[#parts + 1] = string.format("%.0f °C", self.Data.Edge / 1000)
+    end
+    if self.Data.Junction ~= nil then
+        parts[#parts + 1] = string.format("%.0f °C", self.Data.Junction / 1000)
+    end
+    return table.concat(parts, " / ")
+end
+
+function GPU_AMD:MemTemp()
+    local value = self.Data.MemoryTemperature
+    return value ~= nil and string.format("%.0f °C", value / 1000) or ""
+end
+
+function GPU_AMD:ClockSpeed()
+    local current, maximum = self.Data.Clock, self.Data.ClockMaximum
+    if current == nil and maximum == nil then
+        return Locale.NA
+    end
+    if maximum == nil then
+        return string.format("%.0f MHz", current)
+    end
+    return (current ~= nil and string.format("%.0f MHz", current) or Locale.NA) .. " / " .. string.format("%.0f MHz", maximum)
+end
+
+function GPU_AMD:Fan()
+    local current, maximum = self.Data.Fan, self.Data.FanMaximum
+    if current == nil then
+        return Locale.NA
+    end
+    local text = string.format("%.0f rpm", current)
+    if maximum and maximum > 0 then
+        text = text .. string.format(" (%.0f%%)", current / maximum * 100)
+    end
+    return text
+end
+
+function GPU_AMD:Power()
+    local current, maximum = self.Data.Power, self.Data.PowerLimit
+    if current == nil then
+        return Locale.NA
+    end
+    local text = string.format("%.1f W", current / 1000000)
+    if maximum and maximum > 0 then
+        text = text .. string.format(" (%.0f%%)", current / maximum * 100)
+    end
+    return text
+end
+
+function GPU_AMD:Display(cr, y)
+    if not self.Path then
+        return y
+    end
     y = Draw:Header(cr, Locale.VideoCard, y)
 
-    y2 = y
-
-    -- card name
-    if self.CardName and self.CardName ~= nil then
-        if Config.Text then
-            Draw:Font(cr, Config.Text.Special)
-        end
-
-        _, y = Draw:LeftText(cr, self.CardName, y)
-        y = y + 5
+    if self.CardName then
+        Draw:Font(cr, Config.Text.Special)
+        local _, nextY = Draw:LeftText(cr, self.CardName, y)
+        y = nextY + 5
     end
 
-    -- driver version
     if self.DriverVersion then
         Draw:Font(cr, Config.Text.Info)
-        Draw:RightText(cr, self.DriverVersion, y2)
+        local _, nextY = Draw:LeftText(cr, self.DriverVersion, y)
+        y = nextY
     end
 
-    -- graph
-    if self.GraphLine and self.Path and file_exists(self.Path .. "/gpu_busy_percent") then
-        local util = pipe("cat " .. self.Path .. "/gpu_busy_percent")
-        if util == nil then
-            util = 0
-        end
-        y = self.GraphLine:Draw(cr, Config.MarginX, y, util)
+    if self.GraphLine and self.Data.Utilization ~= nil then
+        y = self.GraphLine:Draw(cr, Config.MarginX, y, self.Data.Utilization) or y
     end
 
-    -- Utilization / Temperature
-    local temp = self:Temp()
-    if temp and temp ~= "" then
-        y = Draw:Row(cr, y, Locale.GPU, Config.Text.Label, self:Temp(), Config.Text.Info, self:Utilization(), nil);
+    local temp, clock = self:Temp(), self:ClockSpeed()
+    if temp ~= "" or clock ~= Locale.NA then
+        y = Draw:Row(cr, y, Locale.GPU, Config.Text.Label, temp, Config.Text.Info, clock, nil)
     end
 
-    -- Memory
-    local mem = self:VRAM()
-    local memtmp = self:MemTemp()
-    if (mem and mem ~= "-") or (memtmp and memtmp ~= "") then
-        y = Draw:Row(cr, y, Locale.Memory, Config.Text.Label, self:MemTemp(), Config.Text.Info, self:VRAM(), nil);
+    local memory, memoryTemperature = self:VRAM(), self:MemTemp()
+    if memory ~= Locale.NA or memoryTemperature ~= "" then
+        y = Draw:Row(cr, y, Locale.Memory, Config.Text.Label, memoryTemperature, Config.Text.Info, memory, nil)
     end
 
-    -- Fan
     local fan = self:Fan()
-    if fan and fan ~= "-" then
-        y = Draw:Row(cr, y, Locale.Fan, Config.Text.Label, nil, nil, self:Fan(), Config.Text.Info);
+    if fan ~= Locale.NA then
+        y = Draw:Row(cr, y, Locale.Fan, Config.Text.Label, nil, nil, fan, Config.Text.Info)
     end
 
-    -- Power
     local power = self:Power()
-    if power and power ~= "-" then
-        y = Draw:Row(cr, y, Locale.Power, Config.Text.Label, nil, nil, self:Power(), Config.Text.Info);
+    if power ~= Locale.NA then
+        y = Draw:Row(cr, y, Locale.Power, Config.Text.Label, nil, nil, power, Config.Text.Info)
     end
 
     return y
 end
 
-function AMD_GPU:Update()
-    if os.time() % 60 == 0 then
-        self:_runOncePerMin()
+function GPU_AMD:_readFile(path)
+    local file = io.open(path, "r")
+    if not file then
+        return nil
     end
+
+    local value = file:read("*a")
+    file:close()
+    if not value then
+        return nil
+    end
+    value = value:match("^%s*(.-)%s*$")
+    return value ~= "" and value or nil
 end
 
-function AMD_GPU:VRAM()
-    if self.Path then
-        local used = pipe("cat " .. self.Path .. "mem_info_vram_used")
-        local max = pipe("cat " .. self.Path .. "mem_info_vram_total")
-
-        if used then
-            used = format_bytes(used)
-        else
-            used = "?"
-        end
-        if max then
-            max = format_bytes(max)
-        else
-            max = "?"
-        end
-
-        return used .. " / " .. max
+function GPU_AMD:_readNumber(path)
+    local value = tonumber(self:_readFile(path))
+    if value == nil or value ~= value or math.abs(value) == math.huge then
+        return nil
     end
-    return "-"
+    return value
 end
 
-function AMD_GPU:Temp()
-    if Sensors and Sensors.Json then
-        local edge = Sensors:FindNumber(nil, "amdgpu-pci-0", "edge", "temp1_input")
-        local junction = Sensors:FindNumber(nil, "amdgpu-pci-", "junction", "temp2_input")
+function GPU_AMD:_readHwmon(name)
+    if not self.HwmonPath then
+        return nil
+    end
+    return self:_readNumber(self.HwmonPath .. name)
+end
 
-        if edge or junction then
-            if edge then
-                edge = toInt(edge) .. "°C"
-            end
-
-            if junction then
-                junction = toInt(junction) .. "°C"
-            end
-
-            if edge and junction then
-                return edge .. " / " .. junction
-            elseif edge then
-                return edge
-            elseif junction then
-                return junction
+function GPU_AMD:_findDevice()
+    -- Optional PCI address, e.g. 0000:03:00.0.
+    local requested = Config.AMDGPUAddress
+    local cards = ReadCli("ls /sys/class/drm/ 2>/dev/null") or ""
+    for card in cards:gmatch("%S+") do
+        if card:match("^card%d+$") then
+            local path = "/sys/class/drm/" .. card .. "/device/"
+            local uevent = self:_readFile(path .. "uevent") or ""
+            local driver = ("\n" .. uevent .. "\n"):match("\nDRIVER=([^\n]+)")
+            local address = ("\n" .. uevent .. "\n"):match("\nPCI_SLOT_NAME=([^\n]+)")
+            if self:_readFile(path .. "vendor") == "0x1002" and driver == "amdgpu" and (not requested or requested == address) then
+                return path, address
             end
         end
     end
-
-    return ""
+    return nil, nil
 end
 
-function AMD_GPU:Utilization()
-    if self.Path then
-        local curr = pipe("grep -Pom 1 '\\d+:\\s\\K(\\d+)(?=.*\\*$)' " .. self.Path .. "pp_dpm_sclk")
-        local max = pipe("cat " .. self.Path .. "pp_dpm_sclk | tail -1 | cut -c4-7")
-
-        if curr or max then
-            if curr then
-                curr = toInt(curr) .. " MHz"
-            else
-                curr = "?"
+function GPU_AMD:_findHwmon()
+    if not self.Path then
+        return nil
+    end
+    -- Device path is generated from a validated DRM card name.
+    local directories = ReadCli("ls " .. self.Path .. "hwmon/ 2>/dev/null") or ""
+    for directory in directories:gmatch("%S+") do
+        if directory:match("^hwmon%d+$") then
+            local path = self.Path .. "hwmon/" .. directory .. "/"
+            if self:_readFile(path .. "name") == "amdgpu" then
+                return path
             end
-            if max then
-                max = toInt(max) .. " MHz"
-            else
-                max = "?"
-            end
-            return curr .. " / " .. max
         end
     end
-    return "-"
+    return nil
 end
 
-function AMD_GPU:MemTemp()
-    if Sensors and Sensors.Json then
-        local temp = Sensors.findNumber(nil, "amdgpu-pci-", "mem", "temp3_input")
-        if temp then
-            return toInt(temp) .. "°C"
-        end
-    end
-
-    return ""
-end
-
-function AMD_GPU:Fan()
-    if Sensors and Sensors.Json then
-        local curr = Sensors.findNumber(nil, "amdgpu-pci-", "fan1", "fan1_input");
-        local max = Sensors.findNumber(nil, "amdgpu-pci-", "fan1", "fan1_max");
-
-        if curr then
-            curr = toInt(curr)
-            local percent = "";
-            if max then
-                percent = toInt(curr / max * 100)
-                if percent then
-                    percent = math.floor(percent + 0.5)
-                    percent = " (" .. toInt(curr / max * 100) .. "%)"
-                end
-            end
-            return curr .. " RPM" .. percent
-        end
-    end
-
-    return "-"
-end
-
-function AMD_GPU:Power()
-    if Sensors and Sensors.Json then
-        local curr = Sensors.findNumber(nil, "amdgpu-pci-", "PPT", "power1_average")
-        local max = Sensors.findNumber(nil, "amdgpu-pci-", "PPT", "power1_cap")
-
-        if curr then
-            curr = toInt(curr)
-            local percent = "";
-            if max then
-                percent = toInt(curr / max * 100)
-                if percent then
-                    percent = math.floor(percent + 0.5)
-                    percent = " (" .. toInt(curr / max * 100) .. "%)"
-                end
-            end
-            return curr .. " W" .. percent
-        end
-    end
-    return "-"
-end
-
-function AMD_GPU:_runOncePerMin()
-    local glxinfo = pipe("glxinfo -B | grep -A 10 \"Extended renderer info\" | grep -E \"Version:\"")
-    if glxinfo then
-        local driver = glxinfo:match("Version:(.+)")
-        if driver then
-            self.DriverVersion = trim(driver)
-        end
-    end
-end
-
-AMD_GPU:new()
+GPU_AMD:new()

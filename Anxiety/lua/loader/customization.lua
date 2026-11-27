@@ -1,32 +1,5 @@
 local Customization = {}
 
-function Customization.read(path, objectName)
-    local environment = {}
-    if objectName == "Theme" then
-        local themeHelpers = require("helpers.theme")
-        environment.font = themeHelpers.font
-    end
-
-    local chunk, err = loadfile(path, "t", environment)
-    if not chunk then
-        local file, _, code = io.open(path, "r")
-        if file then
-            file:close()
-        end
-        return nil, err, code
-    end
-
-    local ok, result = pcall(chunk)
-    if not ok then
-        return nil, tostring(result)
-    end
-
-    if result == nil then
-        result = environment[objectName]
-    end
-    return result
-end
-
 local function validate(value, schema, path, optional, dateFormats)
     local expected = type(schema) == "table" and "table" or schema
     if value == nil and optional[path] then
@@ -64,6 +37,33 @@ local function validate(value, schema, path, optional, dateFormats)
     return true
 end
 
+function Customization.read(path, objectName)
+    local environment = {}
+    if objectName == "Theme" then
+        local themeHelpers = require("helpers.theme_helpers")
+        environment.font = themeHelpers.font
+    end
+
+    local chunk, err = loadfile(path, "t", environment)
+    if not chunk then
+        local file, _, code = io.open(path, "r")
+        if file then
+            file:close()
+        end
+        return nil, err, code
+    end
+
+    local ok, result = pcall(chunk)
+    if not ok then
+        return nil, tostring(result)
+    end
+
+    if result == nil then
+        result = environment[objectName]
+    end
+    return result
+end
+
 function Customization.load(loader, root, load_file)
     local function readValid(path)
         local object, err, code = Customization.read(path, loader.objectName)
@@ -71,9 +71,7 @@ function Customization.load(loader, root, load_file)
             return nil, err, code
         end
 
-        local ok, validationError = validate(
-            object, loader.schema, loader.objectName, loader.optional or {}, loader.dateFormats
-        )
+        local ok, validationError = validate(object, loader.schema, loader.objectName, loader.optional or {}, loader.dateFormats)
         if not ok then
             return nil, validationError
         end
